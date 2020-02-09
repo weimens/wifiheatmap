@@ -29,11 +29,13 @@ find_package(Qt5 COMPONENTS Core Quick REQUIRED)
 if(ANDROID)
     add_library(test_qml SHARED
       main.cpp
+      measurementmodel.h
       qml.qrc
     )
 else()
     add_executable(test_qml
       main.cpp
+      measurementmodel.h
       qml.qrc
     )
 endif()

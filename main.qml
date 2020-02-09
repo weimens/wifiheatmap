@@ -37,11 +37,10 @@ ApplicationWindow {
             MouseArea {
                 anchors.fill: parent
                 onClicked: {
-                    var pos = mapToItem(heatmap, mouse.x, mouse.y)
                     posModel.append({
-                                        "posX": pos.x,
-                                        "posY": pos.y
-                                    })
+                                         "pos": Qt.point(mouse.x, mouse.y),
+                                         "z": -50
+                                     })
                 }
             }
         }
@@ -80,34 +79,29 @@ ApplicationWindow {
             width: image.paintedWidth
 
             Repeater {
-                model: ListModel {
-                    id: posModel
-
-                    ListElement {
-                        posX: 400
-                        posY: 20
-                        q: -50
-                    }
-                    ListElement {
-                        posX: 100
-                        posY: 200
-                        q: -60
-                    }
-                    ListElement {
-                        posX: 230
-                        posY: 150
-                        q: -35
-                    }
-                }
+                model: posModel
 
                 Rectangle {
                     id: marker
                     width: 20
                     height: 20
                     color: "#cce6f5"
-                    Component.onCompleted: {
-                        x = posX
-                        y = posY
+                    Binding {
+                        target: marker
+                        property: "x"
+                        value: pos.x
+                    }
+                    Binding {
+                        target: marker
+                        property: "y"
+                        value: pos.y
+                    }
+
+                    Text {
+                        text: Math.round(model.z * (-1))
+                        anchors.fill: parent
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
                     }
 
                     MouseArea {
@@ -117,9 +111,7 @@ ApplicationWindow {
                         onDoubleClicked: posModel.remove(index)
                         drag.onActiveChanged: {
                             if (!markerarea.drag.active) {
-                                var pos = mapToItem(heatmap, marker.x, marker.y)
-                                posModel.get(index).posX = pos.x
-                                posModel.get(index).posY = pos.y
+                                pos = Qt.point(marker.x, marker.y)
                             }
                         }
                     }

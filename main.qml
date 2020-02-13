@@ -9,6 +9,10 @@ ApplicationWindow {
     height: 480
     title: qsTr("wifi heat map")
 
+    function update_heatmap() {
+        heatmapimage.source = "image://heatmap/heatmap/" + Math.random()
+    }
+
     Rectangle {
         id: pane
         width: parent.width
@@ -28,6 +32,17 @@ ApplicationWindow {
             }
         }
 
+        Image {
+            id: heatmapimage
+            anchors.centerIn: image
+            width: image.paintedWidth
+            height: image.paintedHeight
+            opacity: 0.5
+            sourceSize.width: width
+            sourceSize.height: height
+            source: "image://heatmap/heatmap/0"
+        }
+
         Item {
             id: heatmap
             anchors.centerIn: image
@@ -41,6 +56,7 @@ ApplicationWindow {
                                          "pos": Qt.point(mouse.x, mouse.y),
                                          "z": -50
                                      })
+                    update_heatmap()
                 }
             }
         }
@@ -80,6 +96,7 @@ ApplicationWindow {
 
             Repeater {
                 model: posModel
+                onItemRemoved: update_heatmap()
 
                 Rectangle {
                     id: marker
@@ -112,6 +129,7 @@ ApplicationWindow {
                         drag.onActiveChanged: {
                             if (!markerarea.drag.active) {
                                 pos = Qt.point(marker.x, marker.y)
+                                update_heatmap()
                             }
                         }
                     }

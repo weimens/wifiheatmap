@@ -3,6 +3,7 @@
 #include <QQmlContext>
 
 #include "measurementmodel.h"
+#include "heatmapprovider.h"
 
 int main(int argc, char *argv[]) {
   QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
@@ -33,6 +34,8 @@ int main(int argc, char *argv[]) {
   posModel->append({QPoint(-40, -31), -57.4});
   posModel->append({QPoint(284, 242), -66.9});
 
+  HeatMapProvider *heatmap = new HeatMapProvider(posModel);
+  engine.addImageProvider(QLatin1String("heatmap"), heatmap);
   QQmlContext *ctxt = engine.rootContext();
   ctxt->setContextProperty("posModel", posModel);
 

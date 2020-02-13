@@ -25,17 +25,20 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #endif()
 
 find_package(Qt5 COMPONENTS Core Quick REQUIRED)
+find_package(CGAL)
 
 if(ANDROID)
     add_library(test_qml SHARED
       main.cpp
       measurementmodel.h
+      heatmapprovider.h
       qml.qrc
     )
 else()
     add_executable(test_qml
       main.cpp
       measurementmodel.h
+      heatmapprovider.h
       qml.qrc
     )
 endif()
@@ -44,3 +47,4 @@ target_compile_definitions(test_qml
   PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
 target_link_libraries(test_qml
   PRIVATE Qt5::Core Qt5::Quick)
+target_link_libraries(${PROJECT_NAME} PRIVATE CGAL::CGAL)

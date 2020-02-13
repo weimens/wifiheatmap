@@ -1,5 +1,6 @@
 import QtQuick 2.14
 import QtQuick.Controls 2.14
+import QtQuick.Dialogs 1.3
 
 ApplicationWindow {
     id: window
@@ -8,6 +9,14 @@ ApplicationWindow {
     width: 640
     height: 480
     title: qsTr("wifi heat map")
+
+    FileDialog {
+        id: fileDialog
+        title: "Choose an image"
+        onAccepted: image.source = fileUrl
+        nameFilters: [ "Image files (*.png *.jpg)" ]
+        selectedNameFilter: "Image files (*.png *.jpg)"
+    }
 
     function update_heatmap() {
         heatmapimage.source = "image://heatmap/heatmap/" + Math.random()
@@ -35,8 +44,19 @@ ApplicationWindow {
         Image {
             id: heatmapimage
             anchors.centerIn: image
-            width: image.paintedWidth
-            height: image.paintedHeight
+
+            Binding {
+                target: heatmapimage
+                property: "width"
+                value: image.paintedWidth
+            }
+
+            Binding {
+                target: heatmapimage
+                property: "height"
+                value: image.paintedHeight
+            }
+
             opacity: 0.5
             sourceSize.width: width
             sourceSize.height: height
@@ -46,8 +66,18 @@ ApplicationWindow {
         Item {
             id: heatmap
             anchors.centerIn: image
-            height: image.paintedHeight
-            width: image.paintedWidth
+
+            Binding {
+                target: heatmap
+                property: "width"
+                value: image.paintedWidth
+            }
+
+            Binding {
+                target: heatmap
+                property: "height"
+                value: image.paintedHeight
+            }
 
             MouseArea {
                 anchors.fill: parent
@@ -135,6 +165,12 @@ ApplicationWindow {
                     }
                 }
             }
+        }
+    }
+    Button {
+        text: "load map image"
+        onClicked: {
+            fileDialog.open();
         }
     }
 }

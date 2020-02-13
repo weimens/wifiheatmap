@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(test_qml LANGUAGES CXX)
+project(wifiheatmap LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -28,14 +28,14 @@ find_package(Qt5 COMPONENTS Core Quick REQUIRED)
 find_package(CGAL)
 
 if(ANDROID)
-    add_library(test_qml SHARED
+    add_library(${PROJECT_NAME} SHARED
       main.cpp
       measurementmodel.h
       heatmapprovider.h
       qml.qrc
     )
 else()
-    add_executable(test_qml
+    add_executable(${PROJECT_NAME}
       main.cpp
       measurementmodel.h
       heatmapprovider.h
@@ -43,8 +43,8 @@ else()
     )
 endif()
 
-target_compile_definitions(test_qml
+target_compile_definitions(${PROJECT_NAME}
   PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
-target_link_libraries(test_qml
+target_link_libraries(${PROJECT_NAME}
   PRIVATE Qt5::Core Qt5::Quick)
 target_link_libraries(${PROJECT_NAME} PRIVATE CGAL::CGAL)

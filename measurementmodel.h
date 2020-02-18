@@ -2,8 +2,16 @@
 
 #include <QAbstractListModel>
 #include <QPoint>
+#include <cmath>
+
+#include "netlinkwrapper.h"
 
 struct MeasurementItem {
+  QPoint pos;
+  std::map<std::string, NetLink::scan_info> scan;
+};
+
+struct PosZItem {
   QPoint pos;
   qreal z;
 };
@@ -11,6 +19,7 @@ struct MeasurementItem {
 class MeasurementModel : public QAbstractListModel {
   Q_OBJECT
   Q_ENUMS(Roles)
+  Q_PROPERTY(int interface_index MEMBER interface_index)
 
 public:
   enum Roles {
@@ -18,7 +27,9 @@ public:
     zRole,
   };
 
-  using QAbstractListModel::QAbstractListModel;
+  MeasurementModel(QObject *parent = nullptr) : interface_index(0) {}
+
+  void setCurrentBSS(std::list<std::string> bss) { current_bss = bss; }
 
   QHash<int, QByteArray> roleNames() const override{
     return {
@@ -42,8 +53,6 @@ public:
     MeasurementItem &item = m_list[index.row()];
     if (role == posRole)
       item.pos = value.value<QPoint>();
-    else if (role == zRole)
-      item.z = value.toReal();
     else
       return false;
 
@@ -61,7 +70,7 @@ public:
     if (role == posRole)
       return item.pos;
     if (role == zRole)
-      return item.z;
+      return getMaxZ(item);
 
     return {};
   }
@@ -75,25 +84,38 @@ public:
     beginInsertRows(QModelIndex(), row, row + count - 1);
 
     for (int r = 0; r < count; ++r)
-      m_list.insert(row, MeasurementItem({QPoint(10, 10), -4}));
+      m_list.insert(row, MeasurementItem({}));
 
     endInsertRows();
 
     return true;
   }
 
-  void append(MeasurementItem item) {
-    insertRows(rowCount(), 1);
-    setData(index(rowCount() - 1), item.pos, posRole);
-    setData(index(rowCount() - 1), item.z, zRole);
-  }
+  Q_INVOKABLE void measure(QPoint pos) {
+    NetLink::Nl80211 nl80211;
+    NetLink::MessageScan msg(interface_index);
+    nl80211.sendMessageWait(&msg);
+    const std::map<std::string, NetLink::scan_info> &scans = msg.getScan();
+    if (scans.size() == 0)
+      return;
 
-  Q_INVOKABLE void append(QVariantMap vl) {
-    if (vl.contains("pos") && vl.contains("z")) {
-      insertRows(rowCount(), 1);
-      setData(index(rowCount() - 1), vl["pos"], posRole);
-      setData(index(rowCount() - 1), vl["z"], zRole);
+    insertRows(rowCount(), 1);
+    auto idx = index(rowCount() - 1);
+    setData(idx, pos, posRole);
+
+    for (auto s : scans) {
+      NetLink::scan_info scan_info = s.second;
+      if (std::find(kown_bssid.begin(), kown_bssid.end(), scan_info.bssid) ==
+          kown_bssid.end()) {
+        kown_bssid.push_back(scan_info.bssid);
+        emit bssAdded(scan_info.bssid.c_str(), scan_info.ssid.c_str(),
+                      scan_info.freq, scan_info.channel);
+      }
     }
+
+    MeasurementItem &item = m_list[idx.row()];
+    item.scan = scans;
+    emit dataChanged(idx, idx, {zRole});
   }
 
   bool removeRows(int row, int count,
@@ -111,10 +133,48 @@ public:
 
   Q_INVOKABLE void remove(int row, int count = 1) { removeRows(row, count); }
 
-  int size() { return m_list.size(); }
+  std::list<PosZItem> getPosZItems() { // FIXME: meaning less name
+    std::list<PosZItem> ret;
+    for (MeasurementItem mi : m_list) {
+      float z = getMaxZ(mi);
+      if (!std::isnan(z))
+        ret.push_back({mi.pos, z});
+    }
+    return ret;
+  }
 
-  MeasurementItem get(int row) { return m_list.at(row); }
+public slots:
+  void bssChanged(QList<QString> bss) {
+    current_bss = {};
+    for (auto a : bss) {
+      current_bss.push_back(a.toStdString());
+    }
+    for (int i = 0; i < rowCount(); ++i) {
+      QModelIndex idx = index(i, 0);
+      emit dataChanged(idx, idx, {zRole});
+    }
+    emit heatMapChanged();
+  }
+
+signals:
+  void heatMapChanged();
+  void bssAdded(QString bssid, QString ssid, qreal freq, qreal channel);
 
 private:
+  float getMaxZ(const MeasurementItem &item) const {
+    float max_z = -INFINITY;
+    for (std::string bss : current_bss) {
+      if (item.scan.find(bss) != item.scan.end())
+        max_z = std::max(max_z, item.scan.at(bss).signal);
+    }
+    if (std::isinf(max_z)) {
+      return NAN;
+    }
+    return max_z;
+  }
+
+  int interface_index;
+  std::list<std::string> current_bss;
+  std::vector<std::string> kown_bssid;
   QList<MeasurementItem> m_list;
 };

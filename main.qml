@@ -1,6 +1,7 @@
 import QtQuick 2.14
 import QtQuick.Controls 2.14
 import QtQuick.Dialogs 1.3
+import QtQuick.Layouts 1.3
 
 ApplicationWindow {
     id: window
@@ -20,6 +21,11 @@ ApplicationWindow {
 
     function update_heatmap() {
         heatmapimage.source = "image://heatmap/heatmap/" + Math.random()
+    }
+
+    Connections {
+        target: posModel
+        onHeatMapChanged: update_heatmap()
     }
 
     Rectangle {
@@ -82,10 +88,7 @@ ApplicationWindow {
             MouseArea {
                 anchors.fill: parent
                 onClicked: {
-                    posModel.append({
-                                         "pos": Qt.point(mouse.x, mouse.y),
-                                         "z": -50
-                                     })
+                    posModel.measure(Qt.point(mouse.x, mouse.y))
                     update_heatmap()
                 }
             }
@@ -145,7 +148,11 @@ ApplicationWindow {
                     }
 
                     Text {
-                        text: Math.round(model.z * (-1))
+                        text: {
+                            if (isNaN(model.z))
+                                return ""
+                            return Math.round(model.z * (-1))
+                        }
                         anchors.fill: parent
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
@@ -167,10 +174,51 @@ ApplicationWindow {
             }
         }
     }
-    Button {
-        text: "load map image"
-        onClicked: {
-            fileDialog.open();
+
+    ColumnLayout {
+        width: 400
+        Button {
+            text: "load map image"
+            onClicked: {
+                fileDialog.open()
+            }
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+        }
+
+        ComboBox {
+            id: interfaceComboBox
+            model: interfaceModel
+            textRole: "name"
+            valueRole: "interface_index"
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            Binding {
+                target: posModel
+                property: "interface_index"
+                value: interfaceComboBox.currentValue
+            }
+        }
+
+        Rectangle {
+            color: "#FFFFFF"
+            height: 200
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            ListView {
+                anchors.fill: parent
+                model: bssmodel
+                delegate: CheckDelegate {
+                    width: parent.width
+                    text: ssid + ' (' + bss + " ch: " + channel + " freq: " + freq + ')'
+                    checked: selected
+                    onCheckStateChanged: selected = checked
+                }
+                clip: true
+                ScrollBar.vertical: ScrollBar {}
+                ScrollBar.horizontal: ScrollBar {}
+            }
         }
     }
 }

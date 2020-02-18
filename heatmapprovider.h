@@ -113,18 +113,17 @@ private:
       image.setColor(i, m_colors[i]);
     }
 
-    if (m_model->size() < 3) {
+    for (auto posz : m_model->getPosZItems()) {
+      value_function.insert({Point(posz.pos.x(), posz.pos.y()), posz.z});
+    }
+
+    if (value_function.size() < 3) {
       for (int i = 0; i < nx; ++i) {
         for (int j = 0; j < ny; ++j) {
           image.setPixel(i, j, 0);
         }
       }
       return image;
-    }
-
-    for (int i = 0; i < m_model->size(); ++i) {
-      MeasurementItem row = m_model->get(i);
-      value_function.insert({Point(row.pos.x(), row.pos.y()), row.z});
     }
 
     for (auto coord : value_function) {

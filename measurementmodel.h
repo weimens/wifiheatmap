@@ -31,7 +31,7 @@ public:
 
   void setCurrentBSS(std::list<std::string> bss) { current_bss = bss; }
 
-  QHash<int, QByteArray> roleNames() const override{
+  QHash<int, QByteArray> roleNames() const override {
     return {
         {posRole, "pos"},
         {zRole, "z"},

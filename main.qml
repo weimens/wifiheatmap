@@ -15,7 +15,7 @@ ApplicationWindow {
         id: fileDialog
         title: "Choose an image"
         onAccepted: image.source = fileUrl
-        nameFilters: [ "Image files (*.png *.jpg)" ]
+        nameFilters: ["Image files (*.png *.jpg)"]
         selectedNameFilter: "Image files (*.png *.jpg)"
     }
 

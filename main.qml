@@ -19,6 +19,33 @@ ApplicationWindow {
         selectedNameFilter: "Image files (*.png *.jpg)"
     }
 
+    //HACK: https://stackoverflow.com/questions/24927850/get-the-path-from-a-qml-url
+    function urlToPath(urlString) {
+        var s
+        if (urlString.startsWith("file:///")) {
+            var k = urlString.charAt(9) === ':' ? 8 : 7
+            s = urlString.substring(k)
+        } else {
+            s = urlString
+        }
+        return decodeURIComponent(s)
+    }
+
+    FileDialog {
+        id: exportImageDialog
+        title: "Export Image"
+        selectExisting: false
+        onAccepted: {
+            var path = urlToPath(fileUrl)
+            console.debug(path)
+            pane.grabToImage(function (result) {
+                console.debug(result.saveToFile(path))
+            })
+        }
+        nameFilters: ["Image files (*.png *.jpg)"]
+        selectedNameFilter: "Image files (*.png *.jpg)"
+    }
+
     function update_heatmap() {
         heatmapimage.source = "image://heatmap/heatmap/" + Math.random()
     }
@@ -41,10 +68,18 @@ ApplicationWindow {
             anchors.centerIn: parent
             fillMode: Image.PreserveAspectFit
             source: "A4_120dpi.png"
-            Component.onCompleted: {
-                parent.width = width
-                parent.height = height
-            }
+        }
+
+        Binding {
+            target: pane
+            property: "width"
+            value: image.paintedWidth
+        }
+
+        Binding {
+            target: pane
+            property: "height"
+            value: image.paintedHeight
         }
 
         Image {
@@ -182,6 +217,13 @@ ApplicationWindow {
             onClicked: {
                 fileDialog.open()
             }
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+        }
+
+        Button {
+            text: "export image"
+            onClicked: exportImageDialog.open()
             Layout.fillWidth: true
             Layout.fillHeight: true
         }

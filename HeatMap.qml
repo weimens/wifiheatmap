@@ -4,11 +4,17 @@ Item {
     id: heatmap
     property alias sourceBackground: mapimage.source
     property alias sourceHeatMap: heatmapimage.source
+    signal backgroundChanged()
+
+
 
     Image {
         id: mapimage
         anchors.centerIn: parent
         fillMode: Image.PreserveAspectFit
+        Connections{
+            function onSourceChanged() {backgroundChanged()}
+        }
     }
 
     Binding {

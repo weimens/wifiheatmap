@@ -77,12 +77,22 @@ ApplicationWindow {
     }
 
     Rectangle {
-        id: pane
+        id: workingArea
         width: heatmap.width
         height: heatmap.height
         border.color: "black"
         border.width: 1
         antialiasing: true
+        x: parent.width / 2 - width / 2
+        y: parent.height / 2 - height / 2
+        scale: Math.min(parent.width / width, parent.height / height)
+        Connections {
+            target: heatmap
+            function onBackgroundChanged() {
+                workingArea.scale = Math.min(workingArea.parent.width / width,
+                                             workingArea.parent.height / height)
+            }
+        }
 
         HeatMap {
             id: heatmap
@@ -100,25 +110,25 @@ ApplicationWindow {
 
         PinchArea {
             anchors.fill: parent
-            pinch.target: pane
+            pinch.target: workingArea
             pinch.minimumScale: 0.2
             pinch.maximumScale: 10
             pinch.dragAxis: Pinch.XAndYAxis
 
-            //onPinchStarted: pane.transformOriginPoint = mapToItem(pinch.center)
-            //onPinchFinished: pane.transformOriginPoint = pane.center
+            //onPinchStarted: workingArea.transformOriginPoint = mapToItem(pinch.center)
+            //onPinchFinished: workingArea.transformOriginPoint = workingArea.center
             MouseArea {
                 anchors.fill: parent
-                drag.target: pane
+                drag.target: workingArea
                 propagateComposedEvents: true
                 scrollGestureEnabled: false
                 onWheel: {
-                    var delta = pane.scale * wheel.angleDelta.y / 120 / 10
-                    if (parent.pinch.minimumScale > pane.scale + delta)
+                    var delta = workingArea.scale * wheel.angleDelta.y / 120 / 10
+                    if (parent.pinch.minimumScale > workingArea.scale + delta)
                         return
-                    if (parent.pinch.maximumScale < pane.scale + delta)
+                    if (parent.pinch.maximumScale < workingArea.scale + delta)
                         return
-                    pane.scale += delta
+                    workingArea.scale += delta
                 }
                 onClicked: {
                     mouse.accepted = false

@@ -192,34 +192,31 @@ ApplicationWindow {
 
     ColumnLayout {
         width: 400
+        height: parent.height
         Button {
             text: "load map image"
             onClicked: {
                 fileDialog.open()
             }
             Layout.fillWidth: true
-            Layout.fillHeight: true
         }
 
         Button {
             text: "export image"
             onClicked: exportImageDialog.open()
             Layout.fillWidth: true
-            Layout.fillHeight: true
         }
 
         Button {
             text: "save"
             onClicked: saveFileDialog.open()
             Layout.fillWidth: true
-            Layout.fillHeight: true
         }
 
         Button {
             text: "load"
             onClicked: loadFileDialog.open()
             Layout.fillWidth: true
-            Layout.fillHeight: true
         }
 
         ComboBox {
@@ -228,7 +225,6 @@ ApplicationWindow {
             textRole: "name"
             valueRole: "interface_index"
             Layout.fillWidth: true
-            Layout.fillHeight: true
 
             Binding {
                 target: posModel
@@ -237,24 +233,21 @@ ApplicationWindow {
             }
         }
 
-        Rectangle {
-            color: "#FFFFFF"
-            height: 200
+
+        ListView {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            ListView {
-                anchors.fill: parent
-                model: bssmodel
-                delegate: CheckDelegate {
-                    width: parent.width
-                    text: ssid + ' (' + bss + " ch: " + channel + " freq: " + freq + ')'
-                    checked: selected
-                    onCheckStateChanged: selected = checked
-                }
-                clip: true
-                ScrollBar.vertical: ScrollBar {}
-                ScrollBar.horizontal: ScrollBar {}
+            model: bssmodel
+            delegate: CheckDelegate {
+                width: parent.width
+                text: ssid + ' (' + bss + " ch: " + channel + " freq: " + freq + ')'
+                checked: selected
+                onCheckStateChanged: selected = checked
             }
+            clip: true
+            ScrollBar.vertical: ScrollBar {}
+            ScrollBar.horizontal: ScrollBar {}
         }
+
     }
 }

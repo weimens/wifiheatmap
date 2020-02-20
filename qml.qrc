@@ -2,5 +2,6 @@
     <qresource prefix="/">
         <file>main.qml</file>
         <file>A4_120dpi.png</file>
+        <file>HeatMap.qml</file>
     </qresource>
 </RCC>

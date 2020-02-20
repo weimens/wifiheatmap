@@ -14,7 +14,7 @@ ApplicationWindow {
     FileDialog {
         id: fileDialog
         title: "Choose an image"
-        onAccepted: image.source = fileUrl
+        onAccepted: heatmap.sourceBackground = fileUrl
         nameFilters: ["Image files (*.png *.jpg)"]
         selectedNameFilter: "Image files (*.png *.jpg)"
     }
@@ -68,7 +68,7 @@ ApplicationWindow {
     }
 
     function update_heatmap() {
-        heatmapimage.source = "image://heatmap/heatmap/" + Math.random()
+        heatmap.sourceHeatMap = "image://heatmap/heatmap/" + Math.random()
     }
 
     Connections {
@@ -78,68 +78,16 @@ ApplicationWindow {
 
     Rectangle {
         id: pane
-        width: parent.width
-        height: parent.height
+        width: heatmap.width
+        height: heatmap.height
         border.color: "black"
         border.width: 1
         antialiasing: true
 
-        Image {
-            id: image
-            anchors.centerIn: parent
-            fillMode: Image.PreserveAspectFit
-            source: "A4_120dpi.png"
-        }
-
-        Binding {
-            target: pane
-            property: "width"
-            value: image.paintedWidth
-        }
-
-        Binding {
-            target: pane
-            property: "height"
-            value: image.paintedHeight
-        }
-
-        Image {
-            id: heatmapimage
-            anchors.centerIn: image
-
-            Binding {
-                target: heatmapimage
-                property: "width"
-                value: image.paintedWidth
-            }
-
-            Binding {
-                target: heatmapimage
-                property: "height"
-                value: image.paintedHeight
-            }
-
-            opacity: 0.5
-            sourceSize.width: width
-            sourceSize.height: height
-            source: "image://heatmap/heatmap/0"
-        }
-
-        Item {
+        HeatMap {
             id: heatmap
-            anchors.centerIn: image
-
-            Binding {
-                target: heatmap
-                property: "width"
-                value: image.paintedWidth
-            }
-
-            Binding {
-                target: heatmap
-                property: "height"
-                value: image.paintedHeight
-            }
+            sourceBackground: "A4_120dpi.png"
+            sourceHeatMap: "image://heatmap/heatmap/0"
 
             MouseArea {
                 anchors.fill: parent
@@ -179,9 +127,10 @@ ApplicationWindow {
         }
 
         Item {
-            anchors.centerIn: image
-            height: image.paintedHeight
-            width: image.paintedWidth
+            id: heatmapmarker
+            anchors.centerIn: heatmap
+            height: heatmap.height
+            width: heatmap.width
 
             Repeater {
                 model: posModel

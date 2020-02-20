@@ -99,11 +99,15 @@ public:
     if (scans.size() == 0)
       return;
 
+    append(MeasurementItem({pos, scans}));
+  }
+
+  void append(MeasurementItem mi) {
     insertRows(rowCount(), 1);
     auto idx = index(rowCount() - 1);
-    setData(idx, pos, posRole);
+    setData(idx, mi.pos, posRole);
 
-    for (auto s : scans) {
+    for (auto s : mi.scan) {
       NetLink::scan_info scan_info = s.second;
       if (std::find(kown_bssid.begin(), kown_bssid.end(), scan_info.bssid) ==
           kown_bssid.end()) {
@@ -114,7 +118,7 @@ public:
     }
 
     MeasurementItem &item = m_list[idx.row()];
-    item.scan = scans;
+    item.scan = mi.scan;
     emit dataChanged(idx, idx, {zRole});
   }
 
@@ -142,6 +146,8 @@ public:
     }
     return ret;
   }
+
+  QList<MeasurementItem> getMeasurementItems() { return m_list; }
 
 public slots:
   void bssChanged(QList<QString> bss) {

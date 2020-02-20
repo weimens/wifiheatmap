@@ -38,6 +38,7 @@ if(ANDROID)
       netlinkwrapper.cpp
       interfacemodel.h
       bssmodel.h
+      document.h
       qml.qrc
     )
 else()
@@ -49,6 +50,7 @@ else()
       netlinkwrapper.cpp
       interfacemodel.h
       bssmodel.h
+      document.h
       qml.qrc
     )
 endif()

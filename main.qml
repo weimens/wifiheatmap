@@ -46,6 +46,27 @@ ApplicationWindow {
         selectedNameFilter: "Image files (*.png *.jpg)"
     }
 
+    FileDialog {
+        id: saveFileDialog
+        title: "save file"
+        selectExisting: false
+        onAccepted: {
+            document.save(fileUrl)
+        }
+        nameFilters: ["Image files (*.json)"]
+        selectedNameFilter: "Image files (*.json)"
+    }
+
+    FileDialog {
+        id: loadFileDialog
+        title: "load file"
+        onAccepted: {
+            document.load(fileUrl)
+        }
+        nameFilters: ["Image files (*.json)"]
+        selectedNameFilter: "Image files (*.json)"
+    }
+
     function update_heatmap() {
         heatmapimage.source = "image://heatmap/heatmap/" + Math.random()
     }
@@ -224,6 +245,20 @@ ApplicationWindow {
         Button {
             text: "export image"
             onClicked: exportImageDialog.open()
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+        }
+
+        Button {
+            text: "save"
+            onClicked: saveFileDialog.open()
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+        }
+
+        Button {
+            text: "load"
+            onClicked: loadFileDialog.open()
             Layout.fillWidth: true
             Layout.fillHeight: true
         }

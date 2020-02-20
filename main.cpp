@@ -4,6 +4,7 @@
 #include <QSortFilterProxyModel>
 
 #include "bssmodel.h"
+#include "document.h"
 #include "heatmapprovider.h"
 #include "interfacemodel.h"
 #include "measurementmodel.h"
@@ -22,6 +23,7 @@ int main(int argc, char *argv[]) {
   MeasurementModel *posModel = new MeasurementModel;
   HeatMapProvider *heatmap = new HeatMapProvider(posModel);
   engine.addImageProvider(QLatin1String("heatmap"), heatmap);
+  Document *document = new Document(posModel);
 
   InterfaceModel *interfaceModel = new InterfaceModel();
   NetLink::Nl80211 nl80211;
@@ -39,6 +41,7 @@ int main(int argc, char *argv[]) {
 
   ctxt->setContextProperty("posModel", posModel);
   ctxt->setContextProperty("interfaceModel", interfaceModel);
+  ctxt->setContextProperty("document", document);
 
   QSortFilterProxyModel *proxyBssModel = new QSortFilterProxyModel();
   proxyBssModel->setSourceModel(&bssModel);

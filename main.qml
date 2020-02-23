@@ -1,7 +1,7 @@
 import QtQuick 2.14
 import QtQuick.Controls 2.14
-import QtQuick.Dialogs 1.3
 import QtQuick.Layouts 1.3
+import Qt.labs.platform 1.0
 
 ApplicationWindow {
     id: window
@@ -20,14 +20,14 @@ ApplicationWindow {
     FileDialog {
         id: fileDialog
         title: "Choose an image"
-        onAccepted: heatmap.sourceBackground = fileUrl
+        onAccepted: heatmap.sourceBackground = file
         nameFilters: ["Image files (*.png *.jpg)"]
-        selectedNameFilter: "Image files (*.png *.jpg)"
     }
 
     //HACK: https://stackoverflow.com/questions/24927850/get-the-path-from-a-qml-url
     function urlToPath(urlString) {
         var s
+
         if (urlString.startsWith("file:///")) {
             var k = urlString.charAt(9) === ':' ? 8 : 7
             s = urlString.substring(k)
@@ -40,37 +40,35 @@ ApplicationWindow {
     FileDialog {
         id: exportImageDialog
         title: "Export Image"
-        selectExisting: false
+        fileMode: FileDialog.SaveFile
+        defaultSuffix: "png"
         onAccepted: {
-            var path = urlToPath(fileUrl)
-            console.debug(path)
+            var path = urlToPath(file.toString())
             workingArea.grabToImage(function (result) {
-                console.debug(result.saveToFile(path))
+                result.saveToFile(path)
             })
         }
         nameFilters: ["Image files (*.png *.jpg)"]
-        selectedNameFilter: "Image files (*.png *.jpg)"
     }
 
     FileDialog {
         id: saveFileDialog
         title: "save file"
-        selectExisting: false
+        fileMode: FileDialog.SaveFile
+        defaultSuffix: "json"
         onAccepted: {
-            document.save(fileUrl)
+            document.save(file)
         }
-        nameFilters: ["Image files (*.json)"]
-        selectedNameFilter: "Image files (*.json)"
+        nameFilters: ["json files (*.json)"]
     }
 
     FileDialog {
         id: loadFileDialog
         title: "load file"
         onAccepted: {
-            document.load(fileUrl)
+            document.load(file)
         }
-        nameFilters: ["Image files (*.json)"]
-        selectedNameFilter: "Image files (*.json)"
+        nameFilters: ["json files (*.json)"]
     }
 
     function update_heatmap() {

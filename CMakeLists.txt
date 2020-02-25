@@ -68,3 +68,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE CGAL::CGAL)
 target_link_libraries(${PROJECT_NAME} PRIVATE ${NL3_LIBRARIES})
 
 add_subdirectory(trigger_scan)
+
+install(TARGETS ${PROJECT_NAME} DESTINATION bin)

@@ -1,5 +1,5 @@
-import QtQuick 2.14
-import QtQuick.Controls 2.14
+import QtQuick 2.13
+import QtQuick.Controls 2.13
 import QtQuick.Layouts 1.3
 import Qt.labs.platform 1.0
 
@@ -249,13 +249,12 @@ ApplicationWindow {
                 id: interfaceComboBox
                 model: interfaceModel
                 textRole: "name"
-                valueRole: "interface_index"
                 Layout.fillWidth: true
 
                 Binding {
-                    target: posModel
-                    property: "interface_index"
-                    value: interfaceComboBox.currentValue
+                    target: interfaceModel
+                    property: "currentIndex"
+                    value: interfaceComboBox.currentIndex
                 }
             }
 

@@ -24,7 +24,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #    endif()
 #endif()
 
-find_package(Qt5 COMPONENTS Core Quick REQUIRED)
+find_package(Qt5 5.13 COMPONENTS Core Quick REQUIRED)
 find_package(CGAL)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(NL3 REQUIRED libnl-3.0 libnl-genl-3.0)

@@ -25,7 +25,10 @@ int main(int argc, char *argv[]) {
   engine.addImageProvider(QLatin1String("heatmap"), heatmap);
   Document *document = new Document(posModel);
 
-  InterfaceModel *interfaceModel = new InterfaceModel();
+  InterfaceModel *interfaceModel = new InterfaceModel(&app);
+  QObject::connect(interfaceModel, &InterfaceModel::currentInterfaceChanged,
+                   posModel, &MeasurementModel::setInterfaceIndex);
+
   NetLink::Nl80211 nl80211;
   NetLink::MessageInterface msg;
   nl80211.sendMessageWait(&msg);

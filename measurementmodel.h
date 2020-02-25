@@ -19,7 +19,6 @@ struct PosZItem {
 class MeasurementModel : public QAbstractListModel {
   Q_OBJECT
   Q_ENUMS(Roles)
-  Q_PROPERTY(int interface_index MEMBER interface_index)
 
 public:
   enum Roles {
@@ -150,6 +149,8 @@ public:
   QList<MeasurementItem> getMeasurementItems() { return m_list; }
 
 public slots:
+  void setInterfaceIndex(int index) { interface_index = index; }
+
   void bssChanged(QList<QString> bss) {
     current_bss = {};
     for (auto a : bss) {

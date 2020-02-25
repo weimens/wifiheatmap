@@ -31,15 +31,20 @@ public:
   // better.
   QImage requestImage(const QString &id, QSize *size,
                       const QSize &requestedSize) override {
-    qreal ratio = 1.0;
-    if (requestedSize.height() != 0) {
-      ratio =
-          requestedSize.width() / static_cast<qreal>(requestedSize.height());
-    }
+      QImage image;
+      if(id.startsWith("legend")){
+          image = legend(requestedSize);
+      }else{
+        qreal ratio = 1.0;
+        if (requestedSize.height() != 0) {
+          ratio =
+              requestedSize.width() / static_cast<qreal>(requestedSize.height());
+        }
 
-    QImage image = updateHeatMapPlot(ratio, requestedSize);
-    size->setWidth(image.width());
-    size->setHeight(image.height());
+        image = updateHeatMapPlot(ratio, requestedSize);
+      }
+        size->setWidth(image.width());
+        size->setHeight(image.height());
 
     return image;
   }
@@ -82,6 +87,23 @@ private:
       qRgba(0, 104, 55, 255),
   };
 
+  QImage legend(QSize size){
+
+      QImage image = QImage(size.width(), 1, QImage::Format_Indexed8);
+      int colorCount = m_colors.size() - 1;
+      image.setColorCount(colorCount + 1);
+      for (int i = 0; i < m_colors.size(); ++i) {
+          image.setColor(i, m_colors[i]);
+      }
+
+      for (int i = 0; i < size.width(); ++i) {
+          int color = floor(i/static_cast<double>(size.width())*colorCount);
+          image.setPixel(i, 0, color);
+      }
+
+      return image;
+  }
+
   QImage updateHeatMapPlot(qreal ratio, QSize size) {
 
     Delaunay_triangulation T;
@@ -104,7 +126,7 @@ private:
     int w = size.width();
     int h = size.height();
     int zmin = -80;
-    int zmax = -55;
+    int zmax = -54;
 
     QImage image = QImage(nx, ny, QImage::Format_Indexed8);
     int colorCount = m_colors.size() - 1;

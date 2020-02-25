@@ -207,6 +207,42 @@ ApplicationWindow {
         onClicked: sidebar.open()
     }
 
+    Rectangle {
+        color: "#FFFFFF"
+        id: legend
+        width: 350
+        height: 30
+        anchors.rightMargin: 5
+        anchors.bottomMargin: 5
+        anchors.bottom: parent.bottom
+        anchors.right: parent.right
+
+        Image {
+            anchors.fill: parent
+            anchors.leftMargin: -5
+            sourceSize.width: parent.width
+            sourceSize.height: parent.height
+            source: "image://heatmap/legend/0"
+            opacity: 0.5
+        }
+
+        RowLayout{
+            anchors.fill: parent
+            Text {
+                text: "-80\u2009dbm"
+                Layout.alignment: Qt.AlignLeft
+            }
+            Text {
+                text: "-67\u2009dbm"
+                Layout.alignment: Qt.AlignCenter
+            }
+            Text {
+                Layout.alignment: Qt.AlignRight
+                text: "-54\u2009dbm"
+            }
+        }
+    }
+
     Drawer {
         id: sidebar
         width: sidebarWidth

@@ -39,6 +39,7 @@ if(ANDROID)
       interfacemodel.h
       bssmodel.h
       document.h
+      trigger_scan.h
       qml.qrc
     )
 else()
@@ -51,6 +52,7 @@ else()
       interfacemodel.h
       bssmodel.h
       document.h
+      trigger_scan.h
       qml.qrc
     )
 endif()
@@ -64,3 +66,5 @@ target_link_libraries(${PROJECT_NAME}
   PRIVATE Qt5::Core Qt5::Quick)
 target_link_libraries(${PROJECT_NAME} PRIVATE CGAL::CGAL)
 target_link_libraries(${PROJECT_NAME} PRIVATE ${NL3_LIBRARIES})
+
+add_subdirectory(trigger_scan)

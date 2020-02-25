@@ -5,6 +5,7 @@
 #include <cmath>
 
 #include "netlinkwrapper.h"
+#include "trigger_scan.h"
 
 struct MeasurementItem {
   QPoint pos;
@@ -24,9 +25,18 @@ public:
   enum Roles {
     posRole,
     zRole,
+    stateRole,
   };
 
-  MeasurementModel(QObject *parent = nullptr) : interface_index(0) {}
+  MeasurementModel(TriggerScan *scanner, QObject *parent = nullptr)
+      : QAbstractListModel(parent), interface_index(0), m_scanner(scanner),
+        current_bss({}), kown_bssid({}), m_list({}),
+        m_scan_index(QPersistentModelIndex()) {
+    connect(m_scanner, &TriggerScan::scanFinished, this,
+            &MeasurementModel::scanFinished);
+    connect(m_scanner, &TriggerScan::scanFailed, this,
+            &MeasurementModel::scanFailed);
+  }
 
   void setCurrentBSS(std::list<std::string> bss) { current_bss = bss; }
 
@@ -34,6 +44,7 @@ public:
     return {
         {posRole, "pos"},
         {zRole, "z"},
+        {stateRole, "state"},
     };
   }
 
@@ -70,6 +81,9 @@ public:
       return item.pos;
     if (role == zRole)
       return getMaxZ(item);
+    if (role == stateRole) {
+      return item.scan.size() > 0;
+    }
 
     return {};
   }
@@ -91,22 +105,24 @@ public:
   }
 
   Q_INVOKABLE void measure(QPoint pos) {
-    NetLink::Nl80211 nl80211;
-    NetLink::MessageScan msg(interface_index);
-    nl80211.sendMessageWait(&msg);
-    const std::map<std::string, NetLink::scan_info> &scans = msg.getScan();
-    if (scans.size() == 0)
-      return;
-
-    append(MeasurementItem({pos, scans}));
+    if (m_scanner->trigger_scan(interface_index)) {
+      insertRows(rowCount(), 1);
+      QModelIndex idx = index(rowCount() - 1);
+      setData(idx, pos, posRole);
+      m_scan_index = QPersistentModelIndex(idx);
+    }
   }
 
   void append(MeasurementItem mi) {
     insertRows(rowCount(), 1);
     auto idx = index(rowCount() - 1);
     setData(idx, mi.pos, posRole);
+    updateScan(idx, mi.scan);
+  }
 
-    for (auto s : mi.scan) {
+  void updateScan(QModelIndex idx,
+                  std::map<std::string, NetLink::scan_info> scan) {
+    for (auto s : scan) {
       NetLink::scan_info scan_info = s.second;
       if (std::find(kown_bssid.begin(), kown_bssid.end(), scan_info.bssid) ==
           kown_bssid.end()) {
@@ -117,8 +133,8 @@ public:
     }
 
     MeasurementItem &item = m_list[idx.row()];
-    item.scan = mi.scan;
-    emit dataChanged(idx, idx, {zRole});
+    item.scan = scan;
+    emit dataChanged(idx, idx, {zRole, stateRole});
   }
 
   bool removeRows(int row, int count,
@@ -163,6 +179,29 @@ public slots:
     emit heatMapChanged();
   }
 
+  void scanFinished() {
+    if (!m_scan_index.isValid())
+      return;
+
+    NetLink::Nl80211 nl80211;
+    NetLink::MessageScan msg(interface_index);
+    nl80211.sendMessageWait(&msg);
+    const std::map<std::string, NetLink::scan_info> &scans = msg.getScan();
+    if (scans.size() == 0) {
+      remove(m_scan_index.row());
+      return;
+    }
+
+    updateScan(m_scan_index, scans);
+    emit heatMapChanged();
+  }
+
+  void scanFailed(int err) {
+    // TODO: display message
+    if (m_scan_index.isValid())
+      remove(m_scan_index.row());
+  }
+
 signals:
   void heatMapChanged();
   void bssAdded(QString bssid, QString ssid, qreal freq, qreal channel);
@@ -181,7 +220,9 @@ private:
   }
 
   int interface_index;
+  TriggerScan *m_scanner;
   std::list<std::string> current_bss;
   std::vector<std::string> kown_bssid;
   QList<MeasurementItem> m_list;
+  QPersistentModelIndex m_scan_index;
 };

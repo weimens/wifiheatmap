@@ -9,6 +9,7 @@
 #include "interfacemodel.h"
 #include "measurementmodel.h"
 #include "netlinkwrapper.h"
+#include "trigger_scan.h"
 
 int main(int argc, char *argv[]) {
   QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
@@ -20,7 +21,8 @@ int main(int argc, char *argv[]) {
   QQmlApplicationEngine engine;
   QQmlContext *ctxt = engine.rootContext();
 
-  MeasurementModel *posModel = new MeasurementModel;
+  TriggerScan *triggerScan = new TriggerScan(&app);
+  MeasurementModel *posModel = new MeasurementModel(triggerScan, &app);
   HeatMapProvider *heatmap = new HeatMapProvider(posModel);
   engine.addImageProvider(QLatin1String("heatmap"), heatmap);
   Document *document = new Document(posModel);
@@ -42,6 +44,7 @@ int main(int argc, char *argv[]) {
   QObject::connect(posModel, &MeasurementModel::bssAdded, &bssModel,
                    &BssModel::addBss);
 
+  ctxt->setContextProperty("triggerScan", triggerScan);
   ctxt->setContextProperty("posModel", posModel);
   ctxt->setContextProperty("interfaceModel", interfaceModel);
   ctxt->setContextProperty("document", document);

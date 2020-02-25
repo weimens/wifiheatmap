@@ -154,46 +154,9 @@ ApplicationWindow {
                 Repeater {
                     model: posModel
                     onItemRemoved: update_heatmap()
-
-                    Rectangle {
-                        id: marker
+                    delegate: Marker {
                         width: 20
                         height: 20
-                        color: "#cce6f5"
-                        Binding {
-                            target: marker
-                            property: "x"
-                            value: pos.x
-                        }
-                        Binding {
-                            target: marker
-                            property: "y"
-                            value: pos.y
-                        }
-
-                        Text {
-                            text: {
-                                if (isNaN(model.z))
-                                    return ""
-                                return Math.round(model.z * (-1))
-                            }
-                            anchors.fill: parent
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-
-                        MouseArea {
-                            id: markerarea
-                            anchors.fill: parent
-                            drag.target: marker
-                            onDoubleClicked: posModel.remove(index)
-                            drag.onActiveChanged: {
-                                if (!markerarea.drag.active) {
-                                    pos = Qt.point(marker.x, marker.y)
-                                    update_heatmap()
-                                }
-                            }
-                        }
                     }
                 }
             }
@@ -226,7 +189,7 @@ ApplicationWindow {
             opacity: 0.5
         }
 
-        RowLayout{
+        RowLayout {
             anchors.fill: parent
             Text {
                 text: "-80\u2009dbm"
@@ -260,6 +223,12 @@ ApplicationWindow {
                 onClicked: {
                     fileDialog.open()
                 }
+                Layout.fillWidth: true
+            }
+
+            Button {
+                text: triggerScan.running ? "stop scan process" : "start scan process"
+                onClicked: triggerScan.start_scanner()
                 Layout.fillWidth: true
             }
 

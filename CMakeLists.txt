@@ -24,7 +24,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #    endif()
 #endif()
 
-find_package(Qt5 5.13 COMPONENTS Core Quick REQUIRED)
+find_package(Qt5 5.13 COMPONENTS Core Quick Widgets REQUIRED)
 find_package(CGAL)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(NL3 REQUIRED libnl-3.0 libnl-genl-3.0)
@@ -63,7 +63,7 @@ target_compile_definitions(${PROJECT_NAME}
   PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
 
 target_link_libraries(${PROJECT_NAME}
-  PRIVATE Qt5::Core Qt5::Quick)
+  PRIVATE Qt5::Core Qt5::Quick Qt5::Widgets)
 target_link_libraries(${PROJECT_NAME} PRIVATE CGAL::CGAL)
 target_link_libraries(${PROJECT_NAME} PRIVATE ${NL3_LIBRARIES})
 

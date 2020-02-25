@@ -80,6 +80,10 @@ ApplicationWindow {
         onHeatMapChanged: update_heatmap()
     }
 
+    MessageDialog {
+        id: messageDialog
+    }
+
     Rectangle {
         id: body
         anchors.fill: parent
@@ -111,8 +115,13 @@ ApplicationWindow {
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
-                        posModel.measure(Qt.point(mouse.x, mouse.y))
-                        update_heatmap()
+                        if (triggerScan.running) {
+                            posModel.measure(Qt.point(mouse.x, mouse.y))
+                            update_heatmap()
+                        } else {
+                            messageDialog.text = "Scan process is not running!"
+                            messageDialog.visible = true
+                        }
                     }
                 }
             }

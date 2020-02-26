@@ -40,6 +40,8 @@ if(ANDROID)
       bssmodel.h
       document.h
       trigger_scan.h
+      qmlsortfilterproxymodel.h
+      qmlsortfilterproxymodel.cpp
       qml.qrc
     )
 else()
@@ -53,6 +55,8 @@ else()
       bssmodel.h
       document.h
       trigger_scan.h
+      qmlsortfilterproxymodel.h
+      qmlsortfilterproxymodel.cpp
       qml.qrc
     )
 endif()

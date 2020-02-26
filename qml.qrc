@@ -4,5 +4,6 @@
         <file>A4_120dpi.png</file>
         <file>HeatMap.qml</file>
         <file>Marker.qml</file>
+        <file>BssTable.qml</file>
     </qresource>
 </RCC>

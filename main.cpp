@@ -2,6 +2,7 @@
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QSortFilterProxyModel>
+#include <QFontDatabase>
 
 #include "bssmodel.h"
 #include "document.h"
@@ -10,6 +11,7 @@
 #include "measurementmodel.h"
 #include "netlinkwrapper.h"
 #include "trigger_scan.h"
+#include "qmlsortfilterproxymodel.h"
 
 int main(int argc, char *argv[]) {
   QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
@@ -44,16 +46,17 @@ int main(int argc, char *argv[]) {
   QObject::connect(posModel, &MeasurementModel::bssAdded, &bssModel,
                    &BssModel::addBss);
 
+  const QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+
   ctxt->setContextProperty("triggerScan", triggerScan);
   ctxt->setContextProperty("posModel", posModel);
   ctxt->setContextProperty("interfaceModel", interfaceModel);
   ctxt->setContextProperty("document", document);
+  ctxt->setContextProperty("fixedFont", fixedFont);
 
-  QSortFilterProxyModel *proxyBssModel = new QSortFilterProxyModel();
+  QmlSortFilterProxyModel *proxyBssModel = new QmlSortFilterProxyModel(&app);
   proxyBssModel->setSourceModel(&bssModel);
-  proxyBssModel->setSortRole(bssItem::Roles::ssidRole);
   proxyBssModel->setSortCaseSensitivity(Qt::CaseInsensitive);
-  proxyBssModel->sort(0);
   ctxt->setContextProperty("bssmodel", proxyBssModel);
 
   const QUrl url(QStringLiteral("qrc:/main.qml"));

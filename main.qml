@@ -272,16 +272,9 @@ ApplicationWindow {
                 }
             }
 
-            ListView {
+            BssTable {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                model: bssmodel
-                delegate: CheckDelegate {
-                    width: parent.width
-                    text: ssid + ' (' + bss + " ch: " + channel + " freq: " + freq + ')'
-                    checked: selected
-                    onCheckStateChanged: selected = checked
-                }
                 clip: true
                 ScrollBar.vertical: ScrollBar {}
                 ScrollBar.horizontal: ScrollBar {}

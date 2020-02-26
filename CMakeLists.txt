@@ -29,35 +29,34 @@ find_package(CGAL)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(NL3 REQUIRED libnl-3.0 libnl-genl-3.0)
 
+set(HEADERS
+    measurementmodel.h
+    heatmapprovider.h
+    netlinkwrapper.h
+    interfacemodel.h
+    bssmodel.h
+    document.h
+    trigger_scan.h
+    qmlsortfilterproxymodel.h
+    )
+set(SOURCES
+    main.cpp
+    netlinkwrapper.cpp
+    qmlsortfilterproxymodel.cpp
+    )
+set(RESOURCES qml.qrc)
+
 if(ANDROID)
     add_library(${PROJECT_NAME} SHARED
-      main.cpp
-      measurementmodel.h
-      heatmapprovider.h
-      netlinkwrapper.h
-      netlinkwrapper.cpp
-      interfacemodel.h
-      bssmodel.h
-      document.h
-      trigger_scan.h
-      qmlsortfilterproxymodel.h
-      qmlsortfilterproxymodel.cpp
-      qml.qrc
+        ${SOURCES}
+        ${HEADERS}
+        ${RESOURCES}
     )
 else()
     add_executable(${PROJECT_NAME}
-      main.cpp
-      measurementmodel.h
-      heatmapprovider.h
-      netlinkwrapper.h
-      netlinkwrapper.cpp
-      interfacemodel.h
-      bssmodel.h
-      document.h
-      trigger_scan.h
-      qmlsortfilterproxymodel.h
-      qmlsortfilterproxymodel.cpp
-      qml.qrc
+        ${SOURCES}
+        ${HEADERS}
+        ${RESOURCES}
     )
 endif()
 

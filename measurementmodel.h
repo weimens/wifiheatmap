@@ -12,11 +12,6 @@ struct MeasurementItem {
   std::map<std::string, NetLink::scan_info> scan;
 };
 
-struct PosZItem {
-  QPoint pos;
-  qreal z;
-};
-
 class MeasurementModel : public QAbstractListModel {
   Q_OBJECT
   Q_ENUMS(Roles)
@@ -151,16 +146,6 @@ public:
   }
 
   Q_INVOKABLE void remove(int row, int count = 1) { removeRows(row, count); }
-
-  std::list<PosZItem> getPosZItems() { // FIXME: meaning less name
-    std::list<PosZItem> ret;
-    for (MeasurementItem mi : m_list) {
-      float z = getMaxZ(mi);
-      if (!std::isnan(z))
-        ret.push_back({mi.pos, z});
-    }
-    return ret;
-  }
 
   QList<MeasurementItem> getMeasurementItems() { return m_list; }
 

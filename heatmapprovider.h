@@ -135,8 +135,13 @@ private:
       image.setColor(i, m_colors[i]);
     }
 
-    for (auto posz : m_model->getPosZItems()) {
-      value_function.insert({Point(posz.pos.x(), posz.pos.y()), posz.z});
+    for (int i = 0; i < m_model->rowCount(); ++i) {
+      QModelIndex index = m_model->index(i);
+      qreal z = m_model->data(index, m_model->zRole).toReal();
+      if (!std::isnan(z)) {
+        QPoint pos = m_model->data(index, m_model->posRole).value<QPoint>();
+        value_function.insert({Point(pos.x(), pos.y()), z});
+      }
     }
 
     if (value_function.size() < 3) {

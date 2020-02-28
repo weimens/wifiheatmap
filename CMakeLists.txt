@@ -41,6 +41,7 @@ set(HEADERS
     )
 set(SOURCES
     main.cpp
+    measurementmodel.cpp
     netlinkwrapper.cpp
     qmlsortfilterproxymodel.cpp
     )

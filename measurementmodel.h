@@ -70,10 +70,10 @@ signals:
 private:
   float getMaxZ(const MeasurementItem &item) const;
 
-  int interface_index;
-  TriggerScan *m_scanner;
-  std::list<std::string> current_bss;
-  std::vector<std::string> kown_bssid;
-  QList<MeasurementItem> m_list;
-  QPersistentModelIndex m_scan_index;
+  int mInterfaceIndex;
+  TriggerScan *mScanner;
+  std::list<std::string> mCurrentBss;
+  std::vector<std::string> mKownBssid;
+  QList<MeasurementItem> mList;
+  QPersistentModelIndex mScanIndex;
 };

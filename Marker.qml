@@ -31,7 +31,6 @@ Item {
             drag.onActiveChanged: {
                 if (!markerarea.drag.active) {
                     pos = Qt.point(marker.x, marker.y)
-                    update_heatmap()
                 }
             }
         }

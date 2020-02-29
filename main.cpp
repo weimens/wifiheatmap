@@ -1,18 +1,18 @@
 #include <QApplication>
+#include <QFontDatabase>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QSortFilterProxyModel>
-#include <QFontDatabase>
 
 #include "bssmodel.h"
 #include "document.h"
 #include "heatmap.h"
+#include "imageprovider.h"
 #include "interfacemodel.h"
 #include "measurementmodel.h"
 #include "netlinkwrapper.h"
-#include "trigger_scan.h"
 #include "qmlsortfilterproxymodel.h"
-#include "imageprovider.h"
+#include "trigger_scan.h"
 
 int main(int argc, char *argv[]) {
   QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
@@ -26,11 +26,13 @@ int main(int argc, char *argv[]) {
 
   TriggerScan *triggerScan = new TriggerScan(&app);
   MeasurementModel *posModel = new MeasurementModel(triggerScan, &app);
-  HeatMapProvider *heatmap = new HeatMapProvider(posModel);
+  HeatMapProvider *heatmap = new HeatMapProvider();
   engine.addImageProvider(QLatin1String("heatmap"), heatmap);
   Document *document = new Document(posModel);
   ImageProvider *imageProvider = new ImageProvider(document);
   engine.addImageProvider(QLatin1String("document"), imageProvider);
+  HeatMapCalc *heatMapCalc =
+      new HeatMapCalc(heatmap, posModel, document, document);
 
   InterfaceModel *interfaceModel = new InterfaceModel(&app);
   QObject::connect(interfaceModel, &InterfaceModel::currentInterfaceChanged,
@@ -56,6 +58,7 @@ int main(int argc, char *argv[]) {
   ctxt->setContextProperty("interfaceModel", interfaceModel);
   ctxt->setContextProperty("document", document);
   ctxt->setContextProperty("fixedFont", fixedFont);
+  ctxt->setContextProperty("heatMapCalc", heatMapCalc);
 
   QmlSortFilterProxyModel *proxyBssModel = new QmlSortFilterProxyModel(&app);
   proxyBssModel->setSourceModel(&bssModel);

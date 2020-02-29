@@ -20,7 +20,7 @@ ApplicationWindow {
     FileDialog {
         id: fileDialog
         title: "Choose an image"
-        onAccepted: heatmap.sourceBackground = file
+        onAccepted: document.mapImageUrl = file
         nameFilters: ["Image files (*.png *.jpg)"]
     }
 
@@ -71,15 +71,6 @@ ApplicationWindow {
         nameFilters: ["json files (*.json)"]
     }
 
-    function update_heatmap() {
-        heatmap.sourceHeatMap = "image://heatmap/heatmap/" + Math.random()
-    }
-
-    Connections {
-        target: posModel
-        onHeatMapChanged: update_heatmap()
-    }
-
     MessageDialog {
         id: messageDialog
     }
@@ -102,14 +93,13 @@ ApplicationWindow {
             HeatMap {
                 id: heatmap
                 sourceBackground: "image://document/mapimage"
-                sourceHeatMap: "image://heatmap/heatmap/0"
+                sourceHeatMap: "image://heatmap/heatmap"
 
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
                         if (triggerScan.running) {
                             posModel.measure(Qt.point(mouse.x, mouse.y))
-                            update_heatmap()
                         } else {
                             messageDialog.text = "Scan process is not running!"
                             messageDialog.visible = true
@@ -154,7 +144,6 @@ ApplicationWindow {
 
                 Repeater {
                     model: posModel
-                    onItemRemoved: update_heatmap()
                     delegate: Marker {
                         width: 20
                         height: 20

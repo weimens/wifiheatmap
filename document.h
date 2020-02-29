@@ -7,7 +7,7 @@
 
 class Document : public QObject {
   Q_OBJECT
-  Q_PROPERTY(QImage mapImage READ mapImage WRITE setMapImage NOTIFY mapImageChanged)
+  Q_PROPERTY(QUrl mapImageUrl WRITE setMapImageUrl NOTIFY mapImageChanged)
 
 public:
   Document(MeasurementModel *model, QObject *parent = nullptr);
@@ -16,13 +16,14 @@ public:
   Q_INVOKABLE void load(QUrl fileUrl);
 
   QImage mapImage() const;
-  void setMapImage(const QImage &mapImage);
   void setMapImageUrl(const QUrl &mapImageUrl);
 
 signals:
     void mapImageChanged();
 
 private:
+  void setMapImage(const QImage &mapImage);
+
   MeasurementModel *m_model;
   QImage mMapImage;
 };

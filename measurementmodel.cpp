@@ -35,10 +35,12 @@ bool MeasurementModel::setData(const QModelIndex &index, const QVariant &value,
     return false;
 
   MeasurementItem &item = mList[index.row()];
-  if (role == posRole)
+  if (role == posRole) {
     item.pos = value.value<QPoint>();
-  else
+    emit heatMapChanged();
+  } else {
     return false;
+  }
 
   emit dataChanged(index, index, {role});
 
@@ -120,6 +122,7 @@ bool MeasurementModel::removeRows(int row, int count,
   mList.erase(it, it + count);
 
   endRemoveRows();
+  emit heatMapChanged();
   return true;
 }
 

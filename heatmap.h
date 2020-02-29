@@ -4,18 +4,39 @@
 #include <QQuickImageProvider>
 
 #include "measurementmodel.h"
+#include "document.h"
 
 class HeatMapProvider : public QQuickImageProvider {
+friend class HeatMapCalc;
+
 public:
-  HeatMapProvider(MeasurementModel *model);
+  HeatMapProvider();
 
   QImage requestImage(const QString &id, QSize *size,
                       const QSize &requestedSize) override;
 
+protected:
+  void setHeatMapImage(const QImage &heatMapImage);
+
 private:
-  MeasurementModel *mModel;
   QImage mLegend;
+  QImage mHeatMapImage;
 
   void legend();
-  QImage updateHeatMapPlot(qreal ratio, QSize size);
+};
+
+
+class HeatMapCalc : public QObject {
+  Q_OBJECT
+public:
+  HeatMapCalc(HeatMapProvider *heatMapProvider, MeasurementModel *model, Document *document, QObject *parent = nullptr);
+
+  void generateHeatMap();
+signals:
+  void heatMapReady();
+
+private:
+  HeatMapProvider *mHeatMapProvider;
+  MeasurementModel *mModel;
+  Document *mDocument;
 };

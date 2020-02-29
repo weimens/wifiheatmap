@@ -10,6 +10,11 @@ Item {
         onMapImageChanged: mapimage.reload()
     }
 
+    Connections {
+        target: heatMapCalc
+        onHeatMapReady: heatmapimage.reload()
+    }
+
     Image {
         id: mapimage
         anchors.centerIn: parent
@@ -51,7 +56,12 @@ Item {
         }
 
         opacity: 0.5
-        sourceSize.width: width
-        sourceSize.height: height
+
+        cache: false
+        function reload() {
+            var oldSource = source
+            source = ""
+            source = oldSource
+        }
     }
 }

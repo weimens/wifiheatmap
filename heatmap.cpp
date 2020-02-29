@@ -51,9 +51,12 @@ static const QVector<QRgb> colors = {
     qRgba(0, 104, 55, 255),
 };
 
-HeatMapProvider::HeatMapProvider(MeasurementModel *model)
+HeatMapProvider::HeatMapProvider()
     : QQuickImageProvider(QQuickImageProvider::Image) {
-  mModel = model;
+  mHeatMapImage = QImage(1, 1, QImage::Format_Indexed8);
+  mHeatMapImage.setColorCount(1);
+  mHeatMapImage.setColor(0, qRgba(0, 0, 0, 0));
+  mHeatMapImage.setPixel(0, 0, 0);
   legend();
 }
 
@@ -63,13 +66,7 @@ QImage HeatMapProvider::requestImage(const QString &id, QSize *size,
   if (id.startsWith("legend")) {
     image = mLegend;
   } else {
-    qreal ratio = 1.0;
-    if (requestedSize.height() != 0) {
-      ratio =
-          requestedSize.width() / static_cast<qreal>(requestedSize.height());
-    }
-
-    image = updateHeatMapPlot(ratio, requestedSize);
+    image = mHeatMapImage;
   }
   size->setWidth(image.width());
   size->setHeight(image.height());
@@ -90,8 +87,22 @@ void HeatMapProvider::legend() {
   }
 }
 
-QImage HeatMapProvider::updateHeatMapPlot(qreal ratio, QSize size) {
+void HeatMapProvider::setHeatMapImage(const QImage &heatMapImage) {
+  mHeatMapImage = heatMapImage;
+}
 
+HeatMapCalc::HeatMapCalc(HeatMapProvider *heatMapProvider,
+                         MeasurementModel *model, Document *document,
+                         QObject *parent)
+    : QObject(parent), mHeatMapProvider(heatMapProvider), mModel(model),
+      mDocument(document) {
+  connect(mModel, &MeasurementModel::heatMapChanged, this,
+          &HeatMapCalc::generateHeatMap);
+  connect(document, &Document::mapImageChanged, this,
+          &HeatMapCalc::generateHeatMap);
+}
+
+void HeatMapCalc::generateHeatMap() {
   Delaunay_triangulation T;
   typedef std::map<Point, Coord_type, K::Less_xy_2> Coord_map;
   typedef CGAL::Data_access<Coord_map> Value_access;
@@ -101,6 +112,13 @@ QImage HeatMapProvider::updateHeatMapPlot(qreal ratio, QSize size) {
   int nx;
   int ny;
 
+  int w = mDocument->mapImage().size().width();
+  int h = mDocument->mapImage().size().height();
+  qreal ratio = 1.0;
+  if (h != 0) {
+    ratio = w / static_cast<qreal>(h);
+  }
+
   if (ratio >= 1.0) {
     nx = maxsize;
     ny = static_cast<int>(maxsize * ratio);
@@ -109,8 +127,6 @@ QImage HeatMapProvider::updateHeatMapPlot(qreal ratio, QSize size) {
     ny = maxsize;
   }
 
-  int w = size.width();
-  int h = size.height();
   int zmin = -80;
   int zmax = -54;
 
@@ -136,7 +152,9 @@ QImage HeatMapProvider::updateHeatMapPlot(qreal ratio, QSize size) {
         image.setPixel(i, j, 0);
       }
     }
-    return image;
+    mHeatMapProvider->setHeatMapImage(image);
+    emit heatMapReady();
+    return;
   }
 
   for (auto coord : value_function) {
@@ -173,5 +191,8 @@ QImage HeatMapProvider::updateHeatMapPlot(qreal ratio, QSize size) {
       }
     }
   }
-  return image;
+
+  mHeatMapProvider->setHeatMapImage(image);
+  emit heatMapReady();
+  return;
 }

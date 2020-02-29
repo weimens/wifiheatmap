@@ -45,6 +45,7 @@ set(SOURCES
     measurementmodel.cpp
     heatmap.cpp
     netlinkwrapper.cpp
+    interfacemodel.cpp
     bssmodel.cpp
     document.cpp
     qmlsortfilterproxymodel.cpp

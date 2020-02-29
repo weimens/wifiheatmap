@@ -38,6 +38,7 @@ set(HEADERS
     document.h
     trigger_scan.h
     qmlsortfilterproxymodel.h
+    imageprovider.h
     )
 set(SOURCES
     main.cpp
@@ -46,6 +47,7 @@ set(SOURCES
     netlinkwrapper.cpp
     document.cpp
     qmlsortfilterproxymodel.cpp
+    imageprovider.cpp
     )
 set(RESOURCES qml.qrc)
 

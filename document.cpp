@@ -7,6 +7,7 @@
 
 Document::Document(MeasurementModel *model, QObject *parent) : QObject(parent) {
   m_model = model;
+  setMapImageUrl(QUrl(":/A4_120dpi.png"));
 }
 
 void Document::save(QUrl fileUrl) {
@@ -82,4 +83,15 @@ void Document::load(QUrl fileUrl) {
       }
     }
   }
+}
+
+QImage Document::mapImage() const { return mMapImage; }
+
+void Document::setMapImage(const QImage &mapImage) {
+  mMapImage = mapImage;
+  emit mapImageChanged();
+}
+
+void Document::setMapImageUrl(const QUrl &mapImageUrl) {
+  setMapImage(QImage(mapImageUrl.path()));
 }

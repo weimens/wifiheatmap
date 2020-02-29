@@ -12,6 +12,7 @@
 #include "netlinkwrapper.h"
 #include "trigger_scan.h"
 #include "qmlsortfilterproxymodel.h"
+#include "imageprovider.h"
 
 int main(int argc, char *argv[]) {
   QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
@@ -28,6 +29,8 @@ int main(int argc, char *argv[]) {
   HeatMapProvider *heatmap = new HeatMapProvider(posModel);
   engine.addImageProvider(QLatin1String("heatmap"), heatmap);
   Document *document = new Document(posModel);
+  ImageProvider *imageProvider = new ImageProvider(document);
+  engine.addImageProvider(QLatin1String("document"), imageProvider);
 
   InterfaceModel *interfaceModel = new InterfaceModel(&app);
   QObject::connect(interfaceModel, &InterfaceModel::currentInterfaceChanged,

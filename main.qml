@@ -98,18 +98,10 @@ ApplicationWindow {
             x: parent.width / 2 - width / 2
             y: parent.height / 2 - height / 2
             scale: Math.min(parent.width / width, parent.height / height)
-            Connections {
-                target: heatmap
-                function onBackgroundChanged() {
-                    workingArea.scale = Math.min(
-                                workingArea.parent.width / width,
-                                workingArea.parent.height / height)
-                }
-            }
 
             HeatMap {
                 id: heatmap
-                sourceBackground: "A4_120dpi.png"
+                sourceBackground: "image://document/mapimage"
                 sourceHeatMap: "image://heatmap/heatmap/0"
 
                 MouseArea {

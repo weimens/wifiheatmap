@@ -42,6 +42,7 @@ set(HEADERS
 set(SOURCES
     main.cpp
     measurementmodel.cpp
+    heatmapprovider.cpp
     netlinkwrapper.cpp
     qmlsortfilterproxymodel.cpp
     )

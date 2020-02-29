@@ -44,6 +44,7 @@ set(SOURCES
     measurementmodel.cpp
     heatmap.cpp
     netlinkwrapper.cpp
+    document.cpp
     qmlsortfilterproxymodel.cpp
     )
 set(RESOURCES qml.qrc)

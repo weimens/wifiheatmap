@@ -6,7 +6,7 @@
 
 #include "bssmodel.h"
 #include "document.h"
-#include "heatmapprovider.h"
+#include "heatmap.h"
 #include "interfacemodel.h"
 #include "measurementmodel.h"
 #include "netlinkwrapper.h"

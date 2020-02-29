@@ -31,7 +31,7 @@ pkg_check_modules(NL3 REQUIRED libnl-3.0 libnl-genl-3.0)
 
 set(HEADERS
     measurementmodel.h
-    heatmapprovider.h
+    heatmap.h
     netlinkwrapper.h
     interfacemodel.h
     bssmodel.h
@@ -42,7 +42,7 @@ set(HEADERS
 set(SOURCES
     main.cpp
     measurementmodel.cpp
-    heatmapprovider.cpp
+    heatmap.cpp
     netlinkwrapper.cpp
     qmlsortfilterproxymodel.cpp
     )

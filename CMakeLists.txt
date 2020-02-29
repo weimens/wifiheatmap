@@ -48,6 +48,7 @@ set(SOURCES
     interfacemodel.cpp
     bssmodel.cpp
     document.cpp
+    trigger_scan.cpp
     qmlsortfilterproxymodel.cpp
     imageprovider.cpp
     )

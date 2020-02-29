@@ -24,6 +24,7 @@ public:
   HeatMapProvider(MeasurementModel *model)
       : QQuickImageProvider(QQuickImageProvider::Image) {
     m_model = model;
+    legend();
   }
 
   // FIXME: requestImage should be reentrant, so calculating the heatmap on
@@ -33,7 +34,7 @@ public:
                       const QSize &requestedSize) override {
     QImage image;
     if (id.startsWith("legend")) {
-      image = legend(requestedSize);
+      image = mLegend;
     } else {
       qreal ratio = 1.0;
       if (requestedSize.height() != 0) {
@@ -51,6 +52,8 @@ public:
 
 private:
   MeasurementModel *m_model;
+  QImage mLegend;
+
   const QVector<QRgb> m_colors = {
       qRgba(0, 0, 0, 0),         qRgba(165, 0, 38, 255),
       qRgba(173, 8, 38, 255),    qRgba(181, 15, 38, 255),
@@ -87,21 +90,17 @@ private:
       qRgba(0, 104, 55, 255),
   };
 
-  QImage legend(QSize size) {
-
-    QImage image = QImage(size.width(), 1, QImage::Format_Indexed8);
-    int colorCount = m_colors.size() - 1;
-    image.setColorCount(colorCount + 1);
-    for (int i = 0; i < m_colors.size(); ++i) {
-      image.setColor(i, m_colors[i]);
+  void legend() {
+    // first entry in colors is tranparent
+    mLegend = QImage(m_colors.size() - 1, 1, QImage::Format_Indexed8);
+    mLegend.setColorCount(m_colors.size() - 1);
+    for (int i = 1; i < m_colors.size(); ++i) {
+      mLegend.setColor(i - 1, m_colors[i]);
     }
 
-    for (int i = 0; i < size.width(); ++i) {
-      int color = floor(i / static_cast<double>(size.width()) * colorCount);
-      image.setPixel(i, 0, color);
+    for (int i = 0; i < mLegend.colorCount(); ++i) {
+      mLegend.setPixel(i, 0, i);
     }
-
-    return image;
   }
 
   QImage updateHeatMapPlot(qreal ratio, QSize size) {

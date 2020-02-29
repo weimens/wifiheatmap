@@ -191,7 +191,6 @@ ApplicationWindow {
 
         Image {
             anchors.fill: parent
-            anchors.leftMargin: -5
             sourceSize.width: parent.width
             sourceSize.height: parent.height
             source: "image://heatmap/legend/0"

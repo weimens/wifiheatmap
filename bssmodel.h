@@ -1,5 +1,6 @@
 #pragma once
 
+#include "document.h"
 #include <QStandardItem>
 #include <QStandardItemModel>
 
@@ -7,7 +8,7 @@ class BssModel : public QStandardItemModel {
   Q_OBJECT
 
 public:
-  BssModel(QObject *parent = nullptr);
+  BssModel(Document *document, QObject *parent = nullptr);
 
 public slots:
   void selectionChanged(const QModelIndex &topLeft,
@@ -21,4 +22,6 @@ signals:
 
 private:
   QList<QString> getSelectedBss();
+  void setHeader();
+  void measurementsChanged(Measurements *measurements);
 };

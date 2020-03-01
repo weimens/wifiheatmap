@@ -91,18 +91,29 @@ void HeatMapProvider::setHeatMapImage(const QImage &heatMapImage) {
   mHeatMapImage = heatMapImage;
 }
 
-HeatMapCalc::HeatMapCalc(HeatMapProvider *heatMapProvider,
-                         MeasurementModel *model, Document *document,
+HeatMapCalc::HeatMapCalc(HeatMapProvider *heatMapProvider, Document *document,
                          QObject *parent)
-    : QObject(parent), mHeatMapProvider(heatMapProvider), mModel(model),
-      mDocument(document) {
-  connect(mModel, &MeasurementModel::heatMapChanged, this,
-          &HeatMapCalc::generateHeatMap);
+    : QObject(parent), mHeatMapProvider(heatMapProvider), mDocument(document) {
   connect(document, &Document::mapImageChanged, this,
           &HeatMapCalc::generateHeatMap);
+  connect(document, &Document::measurementsChanged, this,
+          &HeatMapCalc::measurementsChanged);
+  measurementsChanged(document->measurements());
+}
+
+void HeatMapCalc::measurementsChanged(Measurements *measurements) {
+  if (!measurements)
+    return;
+
+  connect(measurements, &Measurements::heatMapChanged, this,
+          [=]() { generateHeatMap(); });
+  generateHeatMap();
 }
 
 void HeatMapCalc::generateHeatMap() {
+  if (!(mDocument && mDocument->measurements()))
+    return;
+
   Delaunay_triangulation T;
   typedef std::map<Point, Coord_type, K::Less_xy_2> Coord_map;
   typedef CGAL::Data_access<Coord_map> Value_access;
@@ -137,11 +148,10 @@ void HeatMapCalc::generateHeatMap() {
     image.setColor(i, colors[i]);
   }
 
-  for (int i = 0; i < mModel->rowCount(); ++i) {
-    QModelIndex index = mModel->index(i);
-    qreal z = mModel->data(index, mModel->zRole).toReal();
+  for (int i = 0; i < mDocument->measurements()->items().size(); ++i) {
+    qreal z = mDocument->measurements()->maxZAt(i);
     if (!std::isnan(z)) {
-      QPoint pos = mModel->data(index, mModel->posRole).value<QPoint>();
+      QPoint pos = mDocument->measurements()->posAt(i);
       value_function.insert({Point(pos.x(), pos.y()), z});
     }
   }

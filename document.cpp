@@ -5,8 +5,10 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
-Document::Document(MeasurementModel *model, QObject *parent) : QObject(parent) {
-  m_model = model;
+Document::Document(QObject *parent) : QObject(parent) {}
+
+void Document::newDocument() {
+  setMeasurements();
   setMapImageUrl(QUrl(":/A4_120dpi.png"));
 }
 
@@ -18,7 +20,7 @@ void Document::save(QUrl fileUrl) {
 
   QJsonObject root;
   QJsonArray data;
-  for (auto mi : m_model->getMeasurementItems()) {
+  for (auto mi : mMeasurements->items()) {
     QJsonObject point;
     point["x"] = mi.pos.x();
     point["y"] = mi.pos.y();
@@ -46,6 +48,7 @@ void Document::load(QUrl fileUrl) {
   if (!file.open(QIODevice::ReadOnly)) {
     return;
   }
+  setMeasurements();
 
   QJsonDocument jdoc(QJsonDocument::fromJson(file.readAll()));
   QJsonObject root = jdoc.object();
@@ -79,7 +82,7 @@ void Document::load(QUrl fileUrl) {
         MeasurementItem mi;
         mi.pos = QPoint(point["x"].toInt(), point["y"].toInt());
         mi.scan = scan;
-        m_model->append(mi);
+        mMeasurements->appendItem(mi);
       }
     }
   }
@@ -90,6 +93,20 @@ QImage Document::mapImage() const { return mMapImage; }
 void Document::setMapImage(const QImage &mapImage) {
   mMapImage = mapImage;
   emit mapImageChanged();
+}
+
+// FIXME: is there a better way to reset Measurements
+void Document::setMeasurements() {
+  Measurements *oldMeasurements = nullptr;
+  if (mMeasurements) {
+    oldMeasurements = mMeasurements;
+  }
+
+  mMeasurements = new Measurements(this);
+  measurementsChanged(mMeasurements);
+  if (oldMeasurements) {
+    oldMeasurements->deleteLater();
+  }
 }
 
 void Document::setMapImageUrl(const QUrl &mapImageUrl) {

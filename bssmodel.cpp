@@ -1,15 +1,33 @@
 #include "bssmodel.h"
 
-BssModel::BssModel(QObject *parent) : QStandardItemModel(parent) {
+BssModel::BssModel(Document *document, QObject *parent)
+    : QStandardItemModel(parent) {
   setItemRoleNames(
       {{Qt::DisplayRole, "display"}, {Qt::CheckStateRole, "checkstate"}});
-  QObject::connect(this, &BssModel::dataChanged, this,
-                   &BssModel::selectionChanged);
+  connect(this, &BssModel::dataChanged, this, &BssModel::selectionChanged);
+
+  connect(document, &Document::measurementsChanged, this,
+          &BssModel::measurementsChanged);
+  measurementsChanged(document->measurements());
+}
+
+void BssModel::setHeader() {
   setHorizontalHeaderLabels(QStringList() << "ssid"
                                           << "bss"
                                           << "freq"
                                           << "ch"
                                           << "");
+}
+
+void BssModel::measurementsChanged(Measurements *measurements) {
+  if (measurements) {
+    connect(measurements, &Measurements::bssAdded, this, &BssModel::addBss);
+    connect(this, &BssModel::selectedBssChanged, measurements,
+            &Measurements::bssChanged);
+  }
+
+  clear();
+  setHeader();
 }
 
 void BssModel::selectionChanged(const QModelIndex &topLeft,

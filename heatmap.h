@@ -3,11 +3,11 @@
 #include <QImage>
 #include <QQuickImageProvider>
 
-#include "measurementmodel.h"
 #include "document.h"
+#include "measurements.h"
 
 class HeatMapProvider : public QQuickImageProvider {
-friend class HeatMapCalc;
+  friend class HeatMapCalc;
 
 public:
   HeatMapProvider();
@@ -25,11 +25,13 @@ private:
   void legend();
 };
 
-
 class HeatMapCalc : public QObject {
   Q_OBJECT
 public:
-  HeatMapCalc(HeatMapProvider *heatMapProvider, MeasurementModel *model, Document *document, QObject *parent = nullptr);
+  HeatMapCalc(HeatMapProvider *heatMapProvider, Document *document,
+              QObject *parent = nullptr);
+
+  void measurementsChanged(Measurements *measurements);
 
   void generateHeatMap();
 signals:
@@ -37,6 +39,5 @@ signals:
 
 private:
   HeatMapProvider *mHeatMapProvider;
-  MeasurementModel *mModel;
   Document *mDocument;
 };

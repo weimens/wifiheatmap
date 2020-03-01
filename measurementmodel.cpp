@@ -1,17 +1,17 @@
 #include "measurementmodel.h"
 
-MeasurementModel::MeasurementModel(TriggerScan *scanner, QObject *parent)
+MeasurementModel::MeasurementModel(Document *document, TriggerScan *scanner,
+                                   QObject *parent)
     : QAbstractListModel(parent), mInterfaceIndex(0), mScanner(scanner),
-      mCurrentBss({}), mKownBssid({}), mList({}),
-      mScanIndex(QPersistentModelIndex()) {
+      mScanIndex(QPersistentModelIndex()), mMeasurements(nullptr) {
+
   connect(mScanner, &TriggerScan::scanFinished, this,
           &MeasurementModel::scanFinished);
   connect(mScanner, &TriggerScan::scanFailed, this,
           &MeasurementModel::scanFailed);
-}
-
-void MeasurementModel::setCurrentBSS(std::list<std::string> bss) {
-  mCurrentBss = bss;
+  connect(document, &Document::measurementsChanged, this,
+          &MeasurementModel::setMeasurements);
+  setMeasurements(document->measurements());
 }
 
 QHash<int, QByteArray> MeasurementModel::roleNames() const {
@@ -23,129 +23,76 @@ QHash<int, QByteArray> MeasurementModel::roleNames() const {
 }
 
 int MeasurementModel::rowCount(const QModelIndex &parent) const {
-  if (parent.isValid())
+  if (parent.isValid() || !mMeasurements)
     return 0;
-  return mList.size();
+
+  return mMeasurements->items().size();
 }
 
 bool MeasurementModel::setData(const QModelIndex &index, const QVariant &value,
                                int role) {
-  if (!hasIndex(index.row(), index.column(), index.parent()) ||
-      !value.isValid())
+  if (!index.isValid() || !mMeasurements || !value.isValid())
     return false;
 
-  MeasurementItem &item = mList[index.row()];
-  if (role == posRole) {
+  MeasurementItem item = mMeasurements->items().at(index.row());
+  if (role == posRole)
     item.pos = value.value<QPoint>();
-    emit heatMapChanged();
-  } else {
+  else
     return false;
+
+  if (mMeasurements->setItemAt(index.row(), item)) {
+    emit dataChanged(index, index, {role});
+    return true;
   }
 
-  emit dataChanged(index, index, {role});
+  return false;
+}
 
-  return true;
+Qt::ItemFlags MeasurementModel::flags(const QModelIndex &index) const {
+  if (!index.isValid())
+    return Qt::NoItemFlags;
+
+  return Qt::ItemIsEditable;
 }
 
 QVariant MeasurementModel::data(const QModelIndex &index, int role) const {
-  if (!hasIndex(index.row(), index.column(), index.parent()))
+  if (!index.isValid() || !mMeasurements)
     return {};
 
-  const MeasurementItem &item = mList.at(index.row());
-  if (role == posRole)
+  const MeasurementItem item = mMeasurements->items().at(index.row());
+  switch (role) {
+  case posRole:
     return item.pos;
-  if (role == zRole)
-    return getMaxZ(item);
-  if (role == stateRole) {
+  case zRole:
+    return mMeasurements->maxZAt(index.row());
+  case stateRole:
     return item.scan.size() > 0;
   }
 
   return {};
 }
 
-bool MeasurementModel::insertRows(int row, int count,
-                                  const QModelIndex &parent) {
-
-  if (count < 1 || row < 0 || row > rowCount(parent))
+bool MeasurementModel::measure(QPoint pos) {
+  if (!mMeasurements || !mScanner)
     return false;
-
-  beginInsertRows(QModelIndex(), row, row + count - 1);
-
-  for (int r = 0; r < count; ++r)
-    mList.insert(row, MeasurementItem({}));
-
-  endInsertRows();
-
-  return true;
-}
-
-void MeasurementModel::measure(QPoint pos) {
   if (mScanner->trigger_scan(mInterfaceIndex)) {
-    insertRows(rowCount(), 1);
-    QModelIndex idx = index(rowCount() - 1);
-    setData(idx, pos, posRole);
-    mScanIndex = QPersistentModelIndex(idx);
+    mMeasurements->appendItem({pos, {}});
+    mScanIndex = QPersistentModelIndex(index(rowCount() - 1));
+    return true;
   }
+  return false;
 }
 
-void MeasurementModel::append(MeasurementItem mi) {
-  insertRows(rowCount(), 1);
-  auto idx = index(rowCount() - 1);
-  setData(idx, mi.pos, posRole);
-  updateScan(idx, mi.scan);
+void MeasurementModel::remove(int row) {
+  if (!mMeasurements)
+    return;
+  mMeasurements->removeAt(row);
 }
-
-void MeasurementModel::updateScan(
-    QModelIndex idx, std::map<std::string, NetLink::scan_info> scan) {
-  for (auto s : scan) {
-    NetLink::scan_info scan_info = s.second;
-    if (std::find(mKownBssid.begin(), mKownBssid.end(), scan_info.bssid) ==
-        mKownBssid.end()) {
-      mKownBssid.push_back(scan_info.bssid);
-      emit bssAdded(scan_info.bssid.c_str(), scan_info.ssid.c_str(),
-                    scan_info.freq, scan_info.channel);
-    }
-  }
-
-  MeasurementItem &item = mList[idx.row()];
-  item.scan = scan;
-  emit dataChanged(idx, idx, {zRole, stateRole});
-}
-
-bool MeasurementModel::removeRows(int row, int count,
-                                  const QModelIndex &parent) {
-  if (count <= 0 || row < 0 || (row + count) > rowCount(parent))
-    return false;
-  beginRemoveRows(QModelIndex(), row, row + count - 1);
-
-  const auto it = mList.begin() + row;
-  mList.erase(it, it + count);
-
-  endRemoveRows();
-  emit heatMapChanged();
-  return true;
-}
-
-void MeasurementModel::remove(int row, int count) { removeRows(row, count); }
-
-QList<MeasurementItem> MeasurementModel::getMeasurementItems() { return mList; }
 
 void MeasurementModel::setInterfaceIndex(int index) { mInterfaceIndex = index; }
 
-void MeasurementModel::bssChanged(QList<QString> bss) {
-  mCurrentBss = {};
-  for (auto a : bss) {
-    mCurrentBss.push_back(a.toStdString());
-  }
-  for (int i = 0; i < rowCount(); ++i) {
-    QModelIndex idx = index(i, 0);
-    emit dataChanged(idx, idx, {zRole});
-  }
-  emit heatMapChanged();
-}
-
 void MeasurementModel::scanFinished() {
-  if (!mScanIndex.isValid())
+  if (!mScanIndex.isValid() || !mMeasurements)
     return;
 
   NetLink::Nl80211 nl80211;
@@ -153,12 +100,15 @@ void MeasurementModel::scanFinished() {
   nl80211.sendMessageWait(&msg);
   const std::map<std::string, NetLink::scan_info> &scans = msg.getScan();
   if (scans.size() == 0) {
-    remove(mScanIndex.row());
+    mMeasurements->removeAt(mScanIndex.row());
     return;
   }
 
-  updateScan(mScanIndex, scans);
-  emit heatMapChanged();
+  MeasurementItem item = mMeasurements->items().at(mScanIndex.row());
+  item.scan = scans;
+  if (mMeasurements->setItemAt(mScanIndex.row(), item)) {
+    emit dataChanged(mScanIndex, mScanIndex, {zRole, stateRole});
+  }
 }
 
 void MeasurementModel::scanFailed(int err) {
@@ -167,14 +117,36 @@ void MeasurementModel::scanFailed(int err) {
     remove(mScanIndex.row());
 }
 
-float MeasurementModel::getMaxZ(const MeasurementItem &item) const {
-  float max_z = -INFINITY;
-  for (std::string bss : mCurrentBss) {
-    if (item.scan.find(bss) != item.scan.end())
-      max_z = std::max(max_z, item.scan.at(bss).signal);
+Measurements *MeasurementModel::measurements() const { return mMeasurements; }
+
+void MeasurementModel::setMeasurements(Measurements *measurements) {
+  beginResetModel();
+
+  if (measurements)
+    measurements->disconnect(this);
+
+  mMeasurements = measurements;
+
+  if (mMeasurements) {
+    connect(mMeasurements, &Measurements::preItemAppended, this, [=]() {
+      const int index = mMeasurements->items().size();
+      beginInsertRows(QModelIndex(), index, index);
+    });
+    connect(mMeasurements, &Measurements::postItemAppended, this,
+            [=]() { endInsertRows(); });
+
+    connect(mMeasurements, &Measurements::preItemRemoved, this,
+            [=](int index) { beginRemoveRows(QModelIndex(), index, index); });
+    connect(mMeasurements, &Measurements::postItemRemoved, this,
+            [=]() { endRemoveRows(); });
+
+    connect(mMeasurements, &Measurements::heatMapChanged, this, [=]() {
+      for (int i = 0; i < rowCount(); ++i) {
+        QModelIndex idx = index(i, 0);
+        emit dataChanged(idx, idx, {zRole});
+      }
+    });
   }
-  if (std::isinf(max_z)) {
-    return NAN;
-  }
-  return max_z;
+
+  endResetModel();
 }

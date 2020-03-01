@@ -24,15 +24,15 @@ int main(int argc, char *argv[]) {
   QQmlApplicationEngine engine;
   QQmlContext *ctxt = engine.rootContext();
 
+  Document *document = new Document(&app);
+  document->newDocument();
   TriggerScan *triggerScan = new TriggerScan(&app);
-  MeasurementModel *posModel = new MeasurementModel(triggerScan, &app);
+  MeasurementModel *posModel = new MeasurementModel(document, triggerScan, &app);
   HeatMapProvider *heatmap = new HeatMapProvider();
   engine.addImageProvider(QLatin1String("heatmap"), heatmap);
-  Document *document = new Document(posModel);
   ImageProvider *imageProvider = new ImageProvider(document);
   engine.addImageProvider(QLatin1String("document"), imageProvider);
-  HeatMapCalc *heatMapCalc =
-      new HeatMapCalc(heatmap, posModel, document, document);
+  HeatMapCalc *heatMapCalc = new HeatMapCalc(heatmap, document, document);
 
   InterfaceModel *interfaceModel = new InterfaceModel(&app);
   QObject::connect(interfaceModel, &InterfaceModel::currentInterfaceChanged,
@@ -45,12 +45,7 @@ int main(int argc, char *argv[]) {
     interfaceModel->append(interface.first, interface.second.c_str());
   }
 
-  BssModel bssModel;
-  QObject::connect(&bssModel, &BssModel::selectedBssChanged, posModel,
-                   &MeasurementModel::bssChanged);
-  QObject::connect(posModel, &MeasurementModel::bssAdded, &bssModel,
-                   &BssModel::addBss);
-
+  BssModel bssModel(document);
   const QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
 
   ctxt->setContextProperty("triggerScan", triggerScan);

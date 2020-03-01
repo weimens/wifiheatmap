@@ -39,6 +39,7 @@ set(HEADERS
     trigger_scan.h
     qmlsortfilterproxymodel.h
     imageprovider.h
+    measurements.h
     )
 set(SOURCES
     main.cpp
@@ -51,6 +52,7 @@ set(SOURCES
     trigger_scan.cpp
     qmlsortfilterproxymodel.cpp
     imageprovider.cpp
+    measurements.cpp
     )
 set(RESOURCES qml.qrc)
 

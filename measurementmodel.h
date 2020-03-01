@@ -2,19 +2,17 @@
 
 #include <QAbstractListModel>
 #include <QPoint>
-#include <cmath>
 
+#include "document.h"
+#include "measurements.h"
 #include "netlinkwrapper.h"
 #include "trigger_scan.h"
-
-struct MeasurementItem {
-  QPoint pos;
-  std::map<std::string, NetLink::scan_info> scan;
-};
 
 class MeasurementModel : public QAbstractListModel {
   Q_OBJECT
   Q_ENUMS(Roles)
+  Q_PROPERTY(Measurements *measurements READ measurements WRITE setMeasurements)
+  Q_PROPERTY(int interfaceIndex WRITE setInterfaceIndex)
 
 public:
   enum Roles {
@@ -23,9 +21,8 @@ public:
     stateRole,
   };
 
-  MeasurementModel(TriggerScan *scanner, QObject *parent = nullptr);
-
-  void setCurrentBSS(std::list<std::string> bss);
+  MeasurementModel(Document *document, TriggerScan *scanner,
+                   QObject *parent = nullptr);
 
   QHash<int, QByteArray> roleNames() const override;
 
@@ -37,43 +34,31 @@ public:
   QVariant data(const QModelIndex &index,
                 int role = Qt::DisplayRole) const override;
 
-  bool insertRows(int row, int count,
-                  const QModelIndex &parent = QModelIndex()) override;
+  Q_INVOKABLE bool measure(QPoint pos);
 
-  Q_INVOKABLE void measure(QPoint pos);
-
-  void append(MeasurementItem mi);
-
-  void updateScan(QModelIndex idx,
+  bool updateScan(QModelIndex idx,
                   std::map<std::string, NetLink::scan_info> scan);
 
-  bool removeRows(int row, int count,
-                  const QModelIndex &parent = QModelIndex()) override;
-
-  Q_INVOKABLE void remove(int row, int count = 1);
+  Q_INVOKABLE void remove(int row);
 
   QList<MeasurementItem> getMeasurementItems();
 
+  void setMeasurements(Measurements *measurements);
+
+  Qt::ItemFlags flags(const QModelIndex &index) const override;
+
+  Measurements *measurements() const;
+
 public slots:
   void setInterfaceIndex(int index);
-
-  void bssChanged(QList<QString> bss);
 
   void scanFinished();
 
   void scanFailed(int err);
 
-signals:
-  void heatMapChanged();
-  void bssAdded(QString bssid, QString ssid, qreal freq, qreal channel);
-
 private:
-  float getMaxZ(const MeasurementItem &item) const;
-
   int mInterfaceIndex;
   TriggerScan *mScanner;
-  std::list<std::string> mCurrentBss;
-  std::vector<std::string> mKownBssid;
-  QList<MeasurementItem> mList;
   QPersistentModelIndex mScanIndex;
+  Measurements *mMeasurements;
 };

@@ -26,8 +26,9 @@ int main(int argc, char *argv[]) {
   QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
   QApplication app(argc, argv);
-  app.setApplicationName("wifi heat map");
-  app.setOrganizationDomain("com.github.weimens.wifiheatmap");
+  app.setApplicationName("com.github.weimens.wifiheatmap");
+  app.setWindowIcon(
+      QIcon(":/installer/XDGData/com.github.weimens.wifiheatmap.svg"));
 
   QQmlApplicationEngine engine;
   QQmlContext *ctxt = engine.rootContext();

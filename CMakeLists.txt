@@ -137,6 +137,7 @@ endif()
 if(UNIX AND NOT ANDROID)
     target_link_libraries(${PROJECT_NAME} PRIVATE nl3::genl)
     add_subdirectory(trigger_scan)
+    add_subdirectory(installer/XDGData)
     install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 endif()
 

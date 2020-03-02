@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns='http://www.freedesktop.org/standards/shared-mime-info'>
+  <mime-type type="application/x-extension-whmap">
+    <!-- <sub-class-of type="application/zip"/> -->
+    <comment>WifiHeatMap document files</comment>
+    <glob pattern="*.whmap"/>
+    <icon name="com.github.weimens.wifiheatmap-file"/>
+  </mime-type>
+</mime-info>

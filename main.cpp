@@ -1,4 +1,5 @@
 #include <QApplication>
+#include <QFileInfo>
 #include <QFontDatabase>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -69,6 +70,14 @@ int main(int argc, char *argv[]) {
       },
       Qt::QueuedConnection);
   engine.load(url);
+
+  if (argc == 2) {
+    QString path(argv[1]);
+    QFileInfo check_file(path);
+    if (check_file.exists() && check_file.isFile()) {
+      document->load(QUrl::fromLocalFile(path));
+    }
+  }
 
   return app.exec();
 }

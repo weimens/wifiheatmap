@@ -26,6 +26,7 @@ public:
 
   void append(unsigned char index, QString name);
 
+  void loadInterfaces();
 signals:
   void currrentIndexChanged();
   void currentInterfaceChanged(int currentInterface);

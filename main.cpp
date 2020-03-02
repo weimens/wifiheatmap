@@ -11,7 +11,6 @@
 #include "imageprovider.h"
 #include "interfacemodel.h"
 #include "measurementmodel.h"
-#include "netlinkwrapper.h"
 #include "qmlsortfilterproxymodel.h"
 #include "trigger_scan.h"
 
@@ -38,13 +37,6 @@ int main(int argc, char *argv[]) {
   InterfaceModel *interfaceModel = new InterfaceModel(&app);
   QObject::connect(interfaceModel, &InterfaceModel::currentInterfaceChanged,
                    posModel, &MeasurementModel::setInterfaceIndex);
-
-  NetLink::Nl80211 nl80211;
-  NetLink::MessageInterface msg;
-  nl80211.sendMessageWait(&msg);
-  for (auto interface : msg.getInterfaces()) {
-    interfaceModel->append(interface.first, interface.second.c_str());
-  }
 
   BssModel bssModel(document);
   const QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);

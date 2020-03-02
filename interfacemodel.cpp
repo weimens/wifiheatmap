@@ -1,4 +1,5 @@
 #include "interfacemodel.h"
+#include "netlinkwrapper.h"
 
 InterfaceItem::InterfaceItem(unsigned char index, QString name) {
   QStandardItem();
@@ -15,6 +16,16 @@ InterfaceModel::InterfaceModel(QObject *parent)
                     {InterfaceItem::Roles::nameRole, "name"}});
   connect(this, &InterfaceModel::currrentIndexChanged, this,
           &InterfaceModel::updateCurrentInterfaceIndex);
+  loadInterfaces();
+}
+
+void InterfaceModel::loadInterfaces(){
+    NetLink::Nl80211 nl80211;
+    NetLink::MessageInterface msg;
+    nl80211.sendMessageWait(&msg);
+    for (auto interface : msg.getInterfaces()) {
+      this->append(interface.first, interface.second.c_str());
+    }
 }
 
 void InterfaceModel::append(unsigned char index, QString name) {

@@ -5,6 +5,9 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
+#include <quazip5/quazip.h>
+#include <quazip5/quazipfile.h>
+
 Document::Document(QObject *parent) : QObject(parent) {}
 
 void Document::newDocument() {
@@ -14,8 +17,9 @@ void Document::newDocument() {
 }
 
 bool Document::save(QUrl fileUrl) {
-  QFile file(fileUrl.toLocalFile());
-  if (!file.open(QIODevice::WriteOnly)) {
+
+  QuaZip zip(fileUrl.toLocalFile());
+  if (!zip.open(QuaZip::Mode::mdCreate)) {
     return false;
   }
 
@@ -41,19 +45,49 @@ bool Document::save(QUrl fileUrl) {
   root["data"] = data;
 
   QJsonDocument jdoc(root);
-  file.write(jdoc.toJson(QJsonDocument::Compact));
+
+  QuaZipFile dataFile(&zip);
+  dataFile.open(QIODevice::WriteOnly, QuaZipNewInfo("data.json"));
+  dataFile.write(jdoc.toJson(QJsonDocument::Compact));
+  dataFile.close();
+
+  QuaZipFile mapfile(&zip);
+  mapfile.open(QIODevice::WriteOnly, QuaZipNewInfo("mapimage.png"));
+  mMapImage.save(&mapfile, "png");
+  mapfile.close();
+
+  zip.close();
+
   setNeedsSaving(false);
   return true;
 }
 
 void Document::load(QUrl fileUrl) {
-  QFile file(fileUrl.toLocalFile());
-  if (!file.open(QIODevice::ReadOnly)) {
+  QuaZip zip(fileUrl.toLocalFile());
+  if (!zip.open(QuaZip::Mode::mdUnzip)) {
     return;
   }
   setMeasurements();
 
-  QJsonDocument jdoc(QJsonDocument::fromJson(file.readAll()));
+  QuaZipFile file(&zip);
+  for (bool more = zip.goToFirstFile(); more; more = zip.goToNextFile()) {
+    file.open(QIODevice::ReadOnly);
+    if (file.getActualFileName() == "data.json") {
+      read(file.readAll());
+    } else if (file.getActualFileName() == "mapimage.png") {
+      QImage image;
+      image.load(&file, "png");
+      setMapImage(image);
+    }
+    file.close();
+  }
+  zip.close();
+
+  setNeedsSaving(false);
+}
+
+void Document::read(QByteArray data) {
+  QJsonDocument jdoc(QJsonDocument::fromJson(data));
   QJsonObject root = jdoc.object();
 
   if (root.contains("data") && root["data"].isArray()) {
@@ -89,7 +123,6 @@ void Document::load(QUrl fileUrl) {
       }
     }
   }
-  setNeedsSaving(false);
 }
 
 QImage Document::mapImage() const { return mMapImage; }

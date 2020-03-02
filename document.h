@@ -38,4 +38,5 @@ private:
   Measurements *mMeasurements{nullptr};
   QImage mMapImage;
   bool mNeedsSaving{false};
+  void read(QByteArray data);
 };

@@ -28,6 +28,7 @@ find_package(Qt5 5.13 COMPONENTS Core Quick Widgets REQUIRED)
 find_package(CGAL)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(NL3 REQUIRED libnl-3.0 libnl-genl-3.0)
+find_package(QuaZip5 REQUIRED)
 
 set(HEADERS
     measurementmodel.h
@@ -71,6 +72,7 @@ else()
 endif()
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${NL3_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} PRIVATE ${QUAZIP_INCLUDE_DIRS})
 
 target_compile_definitions(${PROJECT_NAME}
   PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
@@ -79,6 +81,7 @@ target_link_libraries(${PROJECT_NAME}
   PRIVATE Qt5::Core Qt5::Quick Qt5::Widgets)
 target_link_libraries(${PROJECT_NAME} PRIVATE CGAL::CGAL)
 target_link_libraries(${PROJECT_NAME} PRIVATE ${NL3_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${QUAZIP_LIBRARIES})
 
 add_subdirectory(trigger_scan)
 

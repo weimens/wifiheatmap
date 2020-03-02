@@ -72,11 +72,11 @@ ApplicationWindow {
         id: saveFileDialog
         title: "save file"
         fileMode: FileDialog.SaveFile
-        defaultSuffix: "json"
+        defaultSuffix: "whmap"
         onAccepted: {
             document.save(file)
         }
-        nameFilters: ["json files (*.json)"]
+        nameFilters: ["whmap files (*.whmap)"]
     }
 
     FileDialog {
@@ -84,22 +84,22 @@ ApplicationWindow {
         id: saveCloseFileDialog
         title: "save file"
         fileMode: FileDialog.SaveFile
-        defaultSuffix: "json"
+        defaultSuffix: "whmap"
         onAccepted: {
             if (document.save(file)) {
                 Qt.quit()
             }
         }
-        nameFilters: ["json files (*.json)"]
+        nameFilters: ["whmap files (*.whmap)"]
     }
 
     FileDialog {
-        id: loadFileDialog
-        title: "load file"
+        id: openFileDialog
+        title: "open file"
         onAccepted: {
             document.load(file)
         }
-        nameFilters: ["json files (*.json)"]
+        nameFilters: ["whmap files (*.whmap)"]
     }
 
     MessageDialog {
@@ -259,8 +259,8 @@ ApplicationWindow {
             }
 
             Button {
-                text: "load"
-                onClicked: loadFileDialog.open()
+                text: "open"
+                onClicked: openFileDialog.open()
                 Layout.fillWidth: true
             }
 

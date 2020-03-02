@@ -17,6 +17,23 @@ ApplicationWindow {
     readonly property bool inPortrait: window.width < window.height
     readonly property bool sidebarDisabled: inPortrait | window.width < 3 * minSidebarWidth
 
+    MessageDialog {
+        buttons: MessageDialog.Save | MessageDialog.Cancel | MessageDialog.Discard
+        id: messageDialogQuit
+        text: "Save before closing?"
+        onDiscardClicked: Qt.quit()
+        onSaveClicked: {
+            saveCloseFileDialog.open()
+        }
+    }
+
+    onClosing: {
+        close.accepted = !document.needsSaving
+        onTriggered: if (!close.accepted) {
+            messageDialogQuit.open()
+        }
+    }
+
     FileDialog {
         id: fileDialog
         title: "Choose an image"
@@ -58,6 +75,20 @@ ApplicationWindow {
         defaultSuffix: "json"
         onAccepted: {
             document.save(file)
+        }
+        nameFilters: ["json files (*.json)"]
+    }
+
+    FileDialog {
+        //FIXME: nearly the same as saveFileDialog
+        id: saveCloseFileDialog
+        title: "save file"
+        fileMode: FileDialog.SaveFile
+        defaultSuffix: "json"
+        onAccepted: {
+            if (document.save(file)) {
+                Qt.quit()
+            }
         }
         nameFilters: ["json files (*.json)"]
     }
@@ -222,7 +253,7 @@ ApplicationWindow {
             }
 
             Button {
-                text: "save"
+                text: document.needsSaving ? "save*" : "save"
                 onClicked: saveFileDialog.open()
                 Layout.fillWidth: true
             }

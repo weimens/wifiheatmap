@@ -10,12 +10,13 @@ Document::Document(QObject *parent) : QObject(parent) {}
 void Document::newDocument() {
   setMeasurements();
   setMapImageUrl(QUrl(":/A4_120dpi.png"));
+  setNeedsSaving(false);
 }
 
-void Document::save(QUrl fileUrl) {
+bool Document::save(QUrl fileUrl) {
   QFile file(fileUrl.toLocalFile());
   if (!file.open(QIODevice::WriteOnly)) {
-    return;
+    return false;
   }
 
   QJsonObject root;
@@ -41,6 +42,8 @@ void Document::save(QUrl fileUrl) {
 
   QJsonDocument jdoc(root);
   file.write(jdoc.toJson(QJsonDocument::Compact));
+  setNeedsSaving(false);
+  return true;
 }
 
 void Document::load(QUrl fileUrl) {
@@ -86,6 +89,7 @@ void Document::load(QUrl fileUrl) {
       }
     }
   }
+  setNeedsSaving(false);
 }
 
 QImage Document::mapImage() const { return mMapImage; }
@@ -103,12 +107,35 @@ void Document::setMeasurements() {
   }
 
   mMeasurements = new Measurements(this);
+
+  if (mMeasurements) {
+    connect(mMeasurements, &Measurements::postItemAppended, this,
+            [=]() { setNeedsSaving(true); });
+    connect(mMeasurements, &Measurements::postItemRemoved, this, [=]() {
+      if (mMeasurements->items().size() == 0)
+        setNeedsSaving(false);
+      else
+        setNeedsSaving(true);
+    });
+    connect(mMeasurements, &Measurements::ItemChanged, this,
+            [=]() { setNeedsSaving(true); });
+  }
+
   measurementsChanged(mMeasurements);
   if (oldMeasurements) {
     oldMeasurements->deleteLater();
   }
 }
 
+void Document::setNeedsSaving(bool value) {
+  if (mNeedsSaving != value) {
+    mNeedsSaving = value;
+    emit needsSavingChanged(mNeedsSaving);
+  }
+}
+
 void Document::setMapImageUrl(const QUrl &mapImageUrl) {
   setMapImage(QImage(mapImageUrl.path()));
 }
+
+bool Document::needsSaving() const { return mNeedsSaving; }

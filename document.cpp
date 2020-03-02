@@ -29,17 +29,17 @@ bool Document::save(QUrl fileUrl) {
     QJsonObject point;
     point["x"] = mi.pos.x();
     point["y"] = mi.pos.y();
-    QJsonArray nl80211_scan;
+    QJsonArray scanInfo;
     for (auto s : mi.scan) {
       QJsonObject scanItem;
-      scanItem["bssid"] = QString::fromStdString(s.second.bssid);
-      scanItem["ssid"] = QString::fromStdString(s.second.ssid);
+      scanItem["bssid"] = s.second.bssid;
+      scanItem["ssid"] = s.second.ssid;
       scanItem["signal"] = s.second.signal;
       scanItem["freq"] = s.second.freq;
       scanItem["channel"] = s.second.channel;
-      nl80211_scan.append(scanItem);
+      scanInfo.append(scanItem);
     }
-    point["nl80211_scan"] = nl80211_scan;
+    point["scanInfo"] = scanInfo;
     data.append(point);
   }
   root["data"] = data;
@@ -95,21 +95,21 @@ void Document::read(QByteArray data) {
     for (int i = 0; i < data.size(); ++i) {
       QJsonObject point = data[i].toObject();
       if (point.contains("x") && point["x"].isDouble() && point.contains("y") &&
-          point["y"].isDouble() && point.contains("nl80211_scan") &&
-          point["nl80211_scan"].isArray()) {
+          point["y"].isDouble() && point.contains("scanInfo") &&
+          point["scanInfo"].isArray()) {
 
-        QJsonArray nl80211_scan = point["nl80211_scan"].toArray();
-        std::map<std::string, NetLink::scan_info> scan;
-        for (int j = 0; j < nl80211_scan.size(); ++j) {
-          QJsonObject scanItem = nl80211_scan[j].toObject();
+        QJsonArray scanInfo = point["scanInfo"].toArray();
+        std::map<QString, ScanInfo> scan;
+        for (int j = 0; j < scanInfo.size(); ++j) {
+          QJsonObject scanItem = scanInfo[j].toObject();
           if (scanItem.contains("bssid") && scanItem["bssid"].isString() &&
               scanItem.contains("ssid") && scanItem["ssid"].isString() &&
               scanItem.contains("signal") && scanItem["signal"].isDouble() &&
               scanItem.contains("freq") && scanItem["freq"].isDouble() &&
               scanItem.contains("channel") && scanItem["channel"].isDouble()) {
-            NetLink::scan_info item;
-            item.bssid = scanItem["bssid"].toString().toStdString();
-            item.ssid = scanItem["ssid"].toString().toStdString();
+            ScanInfo item;
+            item.bssid = scanItem["bssid"].toString();
+            item.ssid = scanItem["ssid"].toString();
             item.signal = scanItem["signal"].toDouble();
             item.freq = scanItem["freq"].toInt();
             item.channel = scanItem["channel"].toInt();

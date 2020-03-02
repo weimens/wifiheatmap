@@ -27,7 +27,7 @@ qreal Measurements::maxZAt(int index) const {
 
   const MeasurementItem item = mItems.at(index);
   float max_z = -INFINITY;
-  for (std::string bss : mCurrentBss) {
+  for (QString bss : mCurrentBss) {
     if (item.scan.find(bss) != item.scan.end())
       max_z = std::max(max_z, item.scan.at(bss).signal);
   }
@@ -68,19 +68,19 @@ QVector<MeasurementItem> Measurements::items() const { return mItems; }
 void Measurements::bssChanged(QList<QString> bss) {
   mCurrentBss = {};
   for (auto a : bss) {
-    mCurrentBss.push_back(a.toStdString());
+    mCurrentBss.push_back(a);
   }
   emit heatMapChanged();
 }
 
-void Measurements::updateBss(std::map<std::string, NetLink::scan_info> scan) {
-  for (std::pair<std::string, NetLink::scan_info> s : scan) {
-    NetLink::scan_info scan_info = s.second;
+void Measurements::updateBss(std::map<QString, ScanInfo> scan) {
+  for (std::pair<QString, ScanInfo> s : scan) {
+    ScanInfo scan_info = s.second;
     if (std::find(mKownBssid.begin(), mKownBssid.end(), scan_info.bssid) ==
         mKownBssid.end()) {
       mKownBssid.push_back(scan_info.bssid);
-      emit bssAdded(scan_info.bssid.c_str(), scan_info.ssid.c_str(),
-                    scan_info.freq, scan_info.channel);
+      emit bssAdded(scan_info.bssid, scan_info.ssid, scan_info.freq,
+                    scan_info.channel);
     }
   }
 }

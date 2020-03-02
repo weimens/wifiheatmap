@@ -1,4 +1,5 @@
 #include "measurementmodel.h"
+#include "netlinkwrapper.h"
 
 MeasurementModel::MeasurementModel(Document *document, TriggerScan *scanner,
                                    QObject *parent)
@@ -105,7 +106,16 @@ void MeasurementModel::scanFinished() {
   }
 
   MeasurementItem item = mMeasurements->items().at(mScanIndex.row());
-  item.scan = scans;
+  for (auto s : scans) {
+    QString bssid = QString::fromStdString(s.first);
+    item.scan[bssid] = ScanInfo();
+    item.scan[bssid].bssid = QString::fromStdString(s.second.bssid);
+    item.scan[bssid].ssid = QString::fromStdString(s.second.ssid);
+    item.scan[bssid].lastSeen = s.second.last_seen;
+    item.scan[bssid].freq = s.second.freq;
+    item.scan[bssid].signal = s.second.signal;
+    item.scan[bssid].channel = s.second.channel;
+  }
   if (mMeasurements->setItemAt(mScanIndex.row(), item)) {
     emit dataChanged(mScanIndex, mScanIndex, {zRole, stateRole});
   }

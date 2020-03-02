@@ -4,11 +4,18 @@
 #include <QPoint>
 #include <QVector>
 
-#include "netlinkwrapper.h"
+struct ScanInfo {
+  QString bssid;
+  QString ssid;
+  int lastSeen;
+  int freq;
+  float signal;
+  int channel;
+};
 
 struct MeasurementItem {
   QPoint pos;
-  std::map<std::string, NetLink::scan_info> scan;
+  std::map<QString, ScanInfo> scan;
 };
 
 class Measurements : public QObject {
@@ -42,9 +49,9 @@ public slots:
   void bssChanged(QList<QString> bss);
 
 private:
-  void updateBss(std::map<std::string, NetLink::scan_info> scan);
+  void updateBss(std::map<QString, ScanInfo> scan);
 
   QVector<MeasurementItem> mItems;
-  std::list<std::string> mCurrentBss;
-  std::vector<std::string> mKownBssid;
+  std::list<QString> mCurrentBss;
+  std::vector<QString> mKownBssid;
 };

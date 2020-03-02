@@ -5,7 +5,6 @@
 
 #include "document.h"
 #include "measurements.h"
-#include "netlinkwrapper.h"
 #include "trigger_scan.h"
 
 class MeasurementModel : public QAbstractListModel {

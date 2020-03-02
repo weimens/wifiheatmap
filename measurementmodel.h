@@ -36,9 +36,6 @@ public:
 
   Q_INVOKABLE bool measure(QPoint pos);
 
-  bool updateScan(QModelIndex idx,
-                  std::map<std::string, NetLink::scan_info> scan);
-
   Q_INVOKABLE void remove(int row);
 
   QList<MeasurementItem> getMeasurementItems();

@@ -1,7 +1,7 @@
 import QtQuick 2.13
 import QtQuick.Controls 2.13
 import QtQuick.Layouts 1.3
-import Qt.labs.platform 1.0
+import Qt.labs.platform 1.0 as Labs
 
 ApplicationWindow {
     id: window
@@ -17,8 +17,8 @@ ApplicationWindow {
     readonly property bool inPortrait: window.width < window.height
     readonly property bool sidebarDisabled: inPortrait | window.width < 3 * minSidebarWidth
 
-    MessageDialog {
-        buttons: MessageDialog.Save | MessageDialog.Cancel | MessageDialog.Discard
+    Labs.MessageDialog {
+        buttons: Labs.MessageDialog.Save | Labs.MessageDialog.Cancel | Labs.MessageDialog.Discard
         id: messageDialogQuit
         text: "Save before closing?"
         onDiscardClicked: Qt.quit()
@@ -34,8 +34,38 @@ ApplicationWindow {
         }
     }
 
-    FileDialog {
-        id: fileDialog
+    menuBar: MenuBar {
+        id: menuBar
+        Menu {
+            title: qsTr("File")
+            Action {
+                text: qsTr("Open")
+                onTriggered: openFileDialog.open()
+            }
+            Action {
+                text: document.needsSaving ? qsTr("Save*") : qsTr("Save")
+                onTriggered: saveFileDialog.open()
+            }
+            MenuSeparator {}
+            Action {
+                text: qsTr("Load Foor Plan")
+                onTriggered: floorPlanFileDialog.open()
+            }
+            MenuSeparator {}
+            Action {
+                text: qsTr("Export Image")
+                onTriggered: exportImageDialog.open()
+            }
+            MenuSeparator {}
+            Action {
+                text: qsTr("Quit")
+                onTriggered: window.close()
+            }
+        }
+    }
+
+    Labs.FileDialog {
+        id: floorPlanFileDialog
         title: "Choose an image"
         onAccepted: document.mapImageUrl = file
         nameFilters: ["Image files (*.png *.jpg)"]
@@ -54,10 +84,10 @@ ApplicationWindow {
         return decodeURIComponent(s)
     }
 
-    FileDialog {
+    Labs.FileDialog {
         id: exportImageDialog
         title: "Export Image"
-        fileMode: FileDialog.SaveFile
+        fileMode: Labs.FileDialog.SaveFile
         defaultSuffix: "png"
         onAccepted: {
             var path = urlToPath(file.toString())
@@ -68,10 +98,10 @@ ApplicationWindow {
         nameFilters: ["Image files (*.png *.jpg)"]
     }
 
-    FileDialog {
+    Labs.FileDialog {
         id: saveFileDialog
         title: "save file"
-        fileMode: FileDialog.SaveFile
+        fileMode: Labs.FileDialog.SaveFile
         defaultSuffix: "whmap"
         onAccepted: {
             document.save(file)
@@ -79,11 +109,11 @@ ApplicationWindow {
         nameFilters: ["whmap files (*.whmap)"]
     }
 
-    FileDialog {
+    Labs.FileDialog {
         //FIXME: nearly the same as saveFileDialog
         id: saveCloseFileDialog
         title: "save file"
-        fileMode: FileDialog.SaveFile
+        fileMode: Labs.FileDialog.SaveFile
         defaultSuffix: "whmap"
         onAccepted: {
             if (document.save(file)) {
@@ -93,7 +123,7 @@ ApplicationWindow {
         nameFilters: ["whmap files (*.whmap)"]
     }
 
-    FileDialog {
+    Labs.FileDialog {
         id: openFileDialog
         title: "open file"
         onAccepted: {
@@ -102,7 +132,7 @@ ApplicationWindow {
         nameFilters: ["whmap files (*.whmap)"]
     }
 
-    MessageDialog {
+    Labs.MessageDialog {
         id: messageDialog
     }
 
@@ -229,7 +259,8 @@ ApplicationWindow {
     Drawer {
         id: sidebar
         width: sidebarWidth
-        height: window.height
+        y: menuBar.height
+        height: window.height - menuBar.height
 
         modal: sidebarDisabled
         interactive: sidebarDisabled
@@ -238,36 +269,12 @@ ApplicationWindow {
 
         ColumnLayout {
             anchors.fill: parent
-            Button {
-                text: "load floor plan"
-                onClicked: {
-                    fileDialog.open()
-                }
-                Layout.fillWidth: true
-            }
 
             Button {
                 text: triggerScan.running ? "stop scan process" : "start scan process"
                 onClicked: triggerScan.start_scanner()
                 Layout.fillWidth: true
-            }
-
-            Button {
-                text: document.needsSaving ? "save*" : "save"
-                onClicked: saveFileDialog.open()
-                Layout.fillWidth: true
-            }
-
-            Button {
-                text: "open"
-                onClicked: openFileDialog.open()
-                Layout.fillWidth: true
-            }
-
-            Button {
-                text: "export image"
-                onClicked: exportImageDialog.open()
-                Layout.fillWidth: true
+                Layout.topMargin: 5
             }
 
             ComboBox {

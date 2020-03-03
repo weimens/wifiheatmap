@@ -239,7 +239,7 @@ ApplicationWindow {
         ColumnLayout {
             anchors.fill: parent
             Button {
-                text: "load map image"
+                text: "load floor plan"
                 onClicked: {
                     fileDialog.open()
                 }

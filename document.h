@@ -14,7 +14,7 @@ class Document : public QObject {
 
 public:
   Document(QObject *parent = nullptr);
-  void newDocument();
+  Q_INVOKABLE void newDocument();
 
   Q_INVOKABLE bool save(QUrl fileUrl);
   Q_INVOKABLE void load(QUrl fileUrl);

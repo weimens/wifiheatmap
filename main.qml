@@ -27,6 +27,14 @@ ApplicationWindow {
         }
     }
 
+    Labs.MessageDialog {
+        buttons: Labs.MessageDialog.Save | Labs.MessageDialog.Cancel | Labs.MessageDialog.No
+        id: messageDialogNew
+        text: "Save file before open a new one?"
+        onNoClicked: document.newDocument()
+        onSaveClicked: saveNewFileDialog.open()
+    }
+
     onClosing: {
         close.accepted = !document.needsSaving
         onTriggered: if (!close.accepted) {
@@ -38,6 +46,16 @@ ApplicationWindow {
         id: menuBar
         Menu {
             title: qsTr("File")
+            Action {
+                text: qsTr("New")
+                onTriggered: {
+                    if (!document.needsSaving) {
+                        document.newDocument()
+                    } else {
+                        messageDialogNew.open()
+                    }
+                }
+            }
             Action {
                 text: qsTr("Open")
                 onTriggered: openFileDialog.open()
@@ -118,6 +136,20 @@ ApplicationWindow {
         onAccepted: {
             if (document.save(file)) {
                 Qt.quit()
+            }
+        }
+        nameFilters: ["whmap files (*.whmap)"]
+    }
+
+    Labs.FileDialog {
+        //FIXME: nearly the same as saveFileDialog
+        id: saveNewFileDialog
+        title: "save file"
+        fileMode: Labs.FileDialog.SaveFile
+        defaultSuffix: "whmap"
+        onAccepted: {
+            if (document.save(file)) {
+                document.newDocument()
             }
         }
         nameFilters: ["whmap files (*.whmap)"]

@@ -86,6 +86,8 @@ void Document::load(QUrl fileUrl) {
   setNeedsSaving(false);
 }
 
+Measurements *Document::measurements() const { return mMeasurements; }
+
 void Document::read(QByteArray data) {
   QJsonDocument jdoc(QJsonDocument::fromJson(data));
   QJsonObject root = jdoc.object();

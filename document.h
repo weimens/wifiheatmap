@@ -19,7 +19,7 @@ public:
   Q_INVOKABLE bool save(QUrl fileUrl);
   Q_INVOKABLE void load(QUrl fileUrl);
 
-  Measurements *measurements() const { return mMeasurements; }
+  Measurements *measurements() const;
 
   QImage mapImage() const;
   void setMapImageUrl(const QUrl &mapImageUrl);

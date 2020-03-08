@@ -5,13 +5,11 @@
 
 #include "document.h"
 #include "measurements.h"
-#include "trigger_scan.h"
 
 class MeasurementModel : public QAbstractListModel {
   Q_OBJECT
   Q_ENUMS(Roles)
   Q_PROPERTY(Measurements *measurements READ measurements WRITE setMeasurements)
-  Q_PROPERTY(int interfaceIndex WRITE setInterfaceIndex)
 
 public:
   enum Roles {
@@ -20,8 +18,7 @@ public:
     stateRole,
   };
 
-  MeasurementModel(Document *document, TriggerScan *scanner,
-                   QObject *parent = nullptr);
+  MeasurementModel(Document *document, QObject *parent = nullptr);
 
   QHash<int, QByteArray> roleNames() const override;
 
@@ -32,8 +29,6 @@ public:
 
   QVariant data(const QModelIndex &index,
                 int role = Qt::DisplayRole) const override;
-
-  Q_INVOKABLE bool measure(QPoint pos);
 
   Q_INVOKABLE void remove(int row);
 
@@ -46,15 +41,11 @@ public:
   Measurements *measurements() const;
 
 public slots:
-  void setInterfaceIndex(int index);
-
-  void scanFinished();
-
+  void scanFinished(QList<ScanInfo> results);
   void scanFailed(int err);
+  void scanStarted(QPoint pos);
 
 private:
-  int mInterfaceIndex;
-  TriggerScan *mScanner;
   QPersistentModelIndex mScanIndex;
   Measurements *mMeasurements;
 };

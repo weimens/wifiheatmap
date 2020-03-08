@@ -1,7 +1,16 @@
 #include "trigger_scan.h"
+#include "netlinkwrapper.h"
 
-TriggerScan::TriggerScan(QObject *parent)
+TriggerScan::TriggerScan(MeasurementModel *measurementModel, QObject *parent)
     : QObject(parent), mScanning(false), mScanNum(0), mRunning(false) {
+
+  connect(this, &TriggerScan::scanFinished, measurementModel,
+          &MeasurementModel::scanFinished);
+  connect(this, &TriggerScan::scanFailed, measurementModel,
+          &MeasurementModel::scanFailed);
+  connect(this, &TriggerScan::scanStarted, measurementModel,
+          &MeasurementModel::scanStarted);
+
   mScanner = new QProcess(this);
   connect(mScanner, &QProcess::readyReadStandardOutput, this,
           &TriggerScan::onData);
@@ -20,14 +29,18 @@ TriggerScan::~TriggerScan() {
   }
 }
 
-bool TriggerScan::trigger_scan(int devid) {
+bool TriggerScan::measure(QPoint pos) {
   if (mScanning || mScanner->state() != QProcess::Running)
     return false;
   mScanning = true;
   mTimer->start(10000);
   mScanNum++;
-  mScanner->write(
-      QString("SCAN %1 %2\n").arg(devid).arg(mScanNum).toStdString().c_str());
+  mScanner->write(QString("SCAN %1 %2\n")
+                      .arg(mInterfaceIndex)
+                      .arg(mScanNum)
+                      .toStdString()
+                      .c_str());
+  emit scanStarted(pos);
   return true;
 }
 
@@ -46,6 +59,24 @@ void TriggerScan::start_scanner() {
   }
 }
 
+QList<ScanInfo> TriggerScan::results() {
+  NetLink::Nl80211 nl80211;
+  NetLink::MessageScan msg(mInterfaceIndex);
+  nl80211.sendMessageWait(&msg);
+  const std::map<std::string, NetLink::scan_info> &scans = msg.getScan();
+  auto scanInfos = QList<ScanInfo>{};
+  for (auto s : scans) {
+    auto scan = ScanInfo{QString::fromStdString(s.second.bssid),
+                         QString::fromStdString(s.second.ssid),
+                         s.second.last_seen,
+                         s.second.freq,
+                         s.second.signal,
+                         s.second.channel};
+    scanInfos.push_back(scan);
+  }
+  return scanInfos;
+}
+
 void TriggerScan::onData() {
   QString line = mScanner->readLine();
   QStringList msg = line.split(" ");
@@ -55,7 +86,13 @@ void TriggerScan::onData() {
     return;
 
   if (msg[0] == "FIN" && msg.length() == 2) {
-    emit scanFinished();
+    auto res = results();
+    if (res.size() > 0) {
+      emit scanFinished(res);
+    } else {
+      emit scanFailed(254);
+    }
+
     return;
   } else if (msg[0] == "ERR" && msg.length() == 3) {
     int err = msg[2].toInt();
@@ -75,3 +112,5 @@ void TriggerScan::onScannerStateChanged(QProcess::ProcessState newState) {
   mRunning = newState == QProcess::ProcessState::Running;
   emit runningChanged();
 }
+
+void TriggerScan::setInterfaceIndex(int index) { mInterfaceIndex = index; }

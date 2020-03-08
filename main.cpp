@@ -26,8 +26,10 @@ int main(int argc, char *argv[]) {
 
   Document *document = new Document(&app);
   document->newDocument();
-  TriggerScan *triggerScan = new TriggerScan(&app);
-  MeasurementModel *posModel = new MeasurementModel(document, triggerScan, &app);
+
+  MeasurementModel *posModel = new MeasurementModel(document, &app);
+  TriggerScan *triggerScan = new TriggerScan(posModel, &app);
+
   HeatMapProvider *heatmap = new HeatMapProvider();
   engine.addImageProvider(QLatin1String("heatmap"), heatmap);
   ImageProvider *imageProvider = new ImageProvider(document);
@@ -36,7 +38,7 @@ int main(int argc, char *argv[]) {
 
   InterfaceModel *interfaceModel = new InterfaceModel(&app);
   QObject::connect(interfaceModel, &InterfaceModel::currentInterfaceChanged,
-                   posModel, &MeasurementModel::setInterfaceIndex);
+                   triggerScan, &TriggerScan::setInterfaceIndex);
 
   BssModel bssModel(document);
   const QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);

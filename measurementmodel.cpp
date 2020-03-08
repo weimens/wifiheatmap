@@ -1,15 +1,8 @@
 #include "measurementmodel.h"
-#include "netlinkwrapper.h"
 
-MeasurementModel::MeasurementModel(Document *document, TriggerScan *scanner,
-                                   QObject *parent)
-    : QAbstractListModel(parent), mInterfaceIndex(0), mScanner(scanner),
-      mScanIndex(QPersistentModelIndex()), mMeasurements(nullptr) {
-
-  connect(mScanner, &TriggerScan::scanFinished, this,
-          &MeasurementModel::scanFinished);
-  connect(mScanner, &TriggerScan::scanFailed, this,
-          &MeasurementModel::scanFailed);
+MeasurementModel::MeasurementModel(Document *document, QObject *parent)
+    : QAbstractListModel(parent), mScanIndex(QPersistentModelIndex()),
+      mMeasurements(nullptr) {
   connect(document, &Document::measurementsChanged, this,
           &MeasurementModel::setMeasurements);
   setMeasurements(document->measurements());
@@ -73,48 +66,19 @@ QVariant MeasurementModel::data(const QModelIndex &index, int role) const {
   return {};
 }
 
-bool MeasurementModel::measure(QPoint pos) {
-  if (!mMeasurements || !mScanner)
-    return false;
-  if (mScanner->trigger_scan(mInterfaceIndex)) {
-    mMeasurements->appendItem({pos, {}});
-    mScanIndex = QPersistentModelIndex(index(rowCount() - 1));
-    return true;
-  }
-  return false;
-}
-
 void MeasurementModel::remove(int row) {
   if (!mMeasurements)
     return;
   mMeasurements->removeAt(row);
 }
 
-void MeasurementModel::setInterfaceIndex(int index) { mInterfaceIndex = index; }
-
-void MeasurementModel::scanFinished() {
+void MeasurementModel::scanFinished(QList<ScanInfo> results) {
   if (!mScanIndex.isValid() || !mMeasurements)
     return;
 
-  NetLink::Nl80211 nl80211;
-  NetLink::MessageScan msg(mInterfaceIndex);
-  nl80211.sendMessageWait(&msg);
-  const std::map<std::string, NetLink::scan_info> &scans = msg.getScan();
-  if (scans.size() == 0) {
-    mMeasurements->removeAt(mScanIndex.row());
-    return;
-  }
-
   MeasurementItem item = mMeasurements->items().at(mScanIndex.row());
-  for (auto s : scans) {
-    QString bssid = QString::fromStdString(s.first);
-    item.scan[bssid] = ScanInfo();
-    item.scan[bssid].bssid = QString::fromStdString(s.second.bssid);
-    item.scan[bssid].ssid = QString::fromStdString(s.second.ssid);
-    item.scan[bssid].lastSeen = s.second.last_seen;
-    item.scan[bssid].freq = s.second.freq;
-    item.scan[bssid].signal = s.second.signal;
-    item.scan[bssid].channel = s.second.channel;
+  for (auto s : results) {
+    item.scan[s.bssid] = s;
   }
   if (mMeasurements->setItemAt(mScanIndex.row(), item)) {
     emit dataChanged(mScanIndex, mScanIndex, {zRole, stateRole});
@@ -125,6 +89,11 @@ void MeasurementModel::scanFailed(int err) {
   // TODO: display message
   if (mScanIndex.isValid())
     remove(mScanIndex.row());
+}
+
+void MeasurementModel::scanStarted(QPoint pos) {
+  mMeasurements->appendItem({pos, {}});
+  mScanIndex = QPersistentModelIndex(index(rowCount() - 1));
 }
 
 Measurements *MeasurementModel::measurements() const { return mMeasurements; }

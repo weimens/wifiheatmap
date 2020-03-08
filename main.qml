@@ -192,7 +192,7 @@ ApplicationWindow {
                     anchors.fill: parent
                     onClicked: {
                         if (triggerScan.running) {
-                            posModel.measure(Qt.point(mouse.x, mouse.y))
+                            triggerScan.measure(Qt.point(mouse.x, mouse.y))
                         } else {
                             messageDialog.text = "Scan process is not running!"
                             messageDialog.visible = true

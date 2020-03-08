@@ -86,7 +86,7 @@ void Document::load(QUrl fileUrl) {
   setNeedsSaving(false);
 }
 
-Measurements *Document::measurements() const { return mMeasurements; }
+Measurements *Document::measurements() const { return mMeasurements.get(); }
 
 void Document::read(QByteArray data) {
   QJsonDocument jdoc(QJsonDocument::fromJson(data));
@@ -134,32 +134,23 @@ void Document::setMapImage(const QImage &mapImage) {
   emit mapImageChanged();
 }
 
-// FIXME: is there a better way to reset Measurements
 void Document::setMeasurements() {
-  Measurements *oldMeasurements = nullptr;
-  if (mMeasurements) {
-    oldMeasurements = mMeasurements;
-  }
-
-  mMeasurements = new Measurements(this);
+  mMeasurements.reset(new Measurements());
 
   if (mMeasurements) {
-    connect(mMeasurements, &Measurements::postItemAppended, this,
+    connect(mMeasurements.get(), &Measurements::postItemAppended, this,
             [=]() { setNeedsSaving(true); });
-    connect(mMeasurements, &Measurements::postItemRemoved, this, [=]() {
+    connect(mMeasurements.get(), &Measurements::postItemRemoved, this, [=]() {
       if (mMeasurements->items().size() == 0)
         setNeedsSaving(false);
       else
         setNeedsSaving(true);
     });
-    connect(mMeasurements, &Measurements::ItemChanged, this,
+    connect(mMeasurements.get(), &Measurements::ItemChanged, this,
             [=]() { setNeedsSaving(true); });
   }
 
-  measurementsChanged(mMeasurements);
-  if (oldMeasurements) {
-    oldMeasurements->deleteLater();
-  }
+  measurementsChanged(mMeasurements.get());
 }
 
 void Document::setNeedsSaving(bool value) {

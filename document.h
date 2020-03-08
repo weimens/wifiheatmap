@@ -4,6 +4,7 @@
 #include <QImage>
 #include <QObject>
 #include <QUrl>
+#include <memory>
 
 class Document : public QObject {
   Q_OBJECT
@@ -35,7 +36,7 @@ private:
   void setMeasurements();
   void setNeedsSaving(bool value);
 
-  Measurements *mMeasurements{nullptr};
+  std::unique_ptr<Measurements> mMeasurements{nullptr};
   QImage mMapImage;
   bool mNeedsSaving{false};
   void read(QByteArray data);

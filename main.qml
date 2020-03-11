@@ -191,11 +191,16 @@ ApplicationWindow {
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
-                        if (triggerScan.running) {
-                            triggerScan.measure(Qt.point(mouse.x, mouse.y))
-                        } else {
-                            messageDialog.text = "Scan process is not running!"
-                            messageDialog.visible = true
+                        if (Qt.platform.os == "linux") {
+                            if (triggerScan.running) {
+                                triggerScan.measure(Qt.point(mouse.x, mouse.y))
+                            } else {
+                                messageDialog.text = "Scan process is not running!"
+                                messageDialog.visible = true
+                            }
+                        }
+                        if (Qt.platform.os == "android") {
+                            androidScan.measure(Qt.point(mouse.x, mouse.y))
                         }
                     }
                 }
@@ -303,20 +308,22 @@ ApplicationWindow {
             anchors.fill: parent
 
             Button {
-                text: triggerScan.running ? "stop scan process" : "start scan process"
-                onClicked: triggerScan.start_scanner()
+                visible: Qt.platform.os == "linux"
+                text: Qt.platform.os == "linux" && triggerScan.running ? "stop scan process" : "start scan process"
+                onClicked: Qt.platform.os == "linux" && triggerScan.start_scanner()
                 Layout.fillWidth: true
                 Layout.topMargin: 5
             }
 
             ComboBox {
+                visible: Qt.platform.os == "linux"
                 id: interfaceComboBox
-                model: interfaceModel
+                model: Qt.platform.os == "linux" ? interfaceModel : undefined
                 textRole: "name"
                 Layout.fillWidth: true
 
                 Binding {
-                    target: interfaceModel
+                    target: interfaceModel //FIXME
                     property: "currentIndex"
                     value: interfaceComboBox.currentIndex
                 }

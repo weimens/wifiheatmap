@@ -13,6 +13,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(CGAL)
 if(ANDROID)
+    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
     set(QUAZIP_LIB_VERSION_SUFFIX 5)
     find_package(QuaZip5 REQUIRED CONFIG)
     set(ANDROID_EXTRA_LIBS ${QUAZIP_LIBRARIES})
@@ -26,6 +27,9 @@ if(NOT ANDROID)
 endif()
 
 find_package(Qt5 5.13 COMPONENTS Core Quick Widgets REQUIRED)
+if(ANDROID)
+    find_package(Qt5 COMPONENTS AndroidExtras REQUIRED)
+endif()
 
 set(HEADERS
     measurementmodel.h
@@ -62,6 +66,17 @@ if(NOT ANDROID)
 endif()
 
 if(ANDROID)
+    list(APPEND HEADERS
+        androidscan.h
+        androidhelper.h
+    )
+    list(APPEND SOURCES
+        androidscan.cpp
+        androidhelper.cpp
+    )
+endif()
+
+if(ANDROID)
     add_library(${PROJECT_NAME} SHARED
         ${SOURCES}
         ${HEADERS}
@@ -87,6 +102,9 @@ target_link_libraries(${PROJECT_NAME}
   PRIVATE Qt5::Core Qt5::Quick Qt5::Widgets)
 target_link_libraries(${PROJECT_NAME} PRIVATE CGAL::CGAL)
 target_link_libraries(${PROJECT_NAME} PRIVATE ${QUAZIP_LIBRARIES})
+if(ANDROID)
+    target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::AndroidExtras)
+endif()
 if(NOT ANDROID)
     target_link_libraries(${PROJECT_NAME} PRIVATE ${NL3_LIBRARIES})
     add_subdirectory(trigger_scan)

@@ -17,6 +17,10 @@
 #include "trigger_scan.h"
 #endif
 
+#ifdef Q_OS_ANDROID
+#include "androidscan.h"
+#endif
+
 int main(int argc, char *argv[]) {
   QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
@@ -47,6 +51,11 @@ int main(int argc, char *argv[]) {
                    triggerScan, &TriggerScan::setInterfaceIndex);
   ctxt->setContextProperty("triggerScan", triggerScan);
   ctxt->setContextProperty("interfaceModel", interfaceModel);
+#endif
+
+#ifdef Q_OS_ANDROID
+  AndroidScan *androidScan = new AndroidScan(posModel, &app);
+  ctxt->setContextProperty("androidScan", androidScan);
 #endif
 
   ctxt->setContextProperty("posModel", posModel);

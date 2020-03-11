@@ -9,10 +9,13 @@
 #include "document.h"
 #include "heatmap.h"
 #include "imageprovider.h"
-#include "interfacemodel.h"
 #include "measurementmodel.h"
 #include "qmlsortfilterproxymodel.h"
+
+#ifndef Q_OS_ANDROID
+#include "interfacemodel.h"
 #include "trigger_scan.h"
+#endif
 
 int main(int argc, char *argv[]) {
   QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
@@ -28,24 +31,25 @@ int main(int argc, char *argv[]) {
   document->newDocument();
 
   MeasurementModel *posModel = new MeasurementModel(document, &app);
-  TriggerScan *triggerScan = new TriggerScan(posModel, &app);
-
   HeatMapProvider *heatmap = new HeatMapProvider();
   engine.addImageProvider(QLatin1String("heatmap"), heatmap);
   ImageProvider *imageProvider = new ImageProvider(document);
   engine.addImageProvider(QLatin1String("document"), imageProvider);
   HeatMapCalc *heatMapCalc = new HeatMapCalc(heatmap, document, document);
 
-  InterfaceModel *interfaceModel = new InterfaceModel(&app);
-  QObject::connect(interfaceModel, &InterfaceModel::currentInterfaceChanged,
-                   triggerScan, &TriggerScan::setInterfaceIndex);
-
   BssModel bssModel(document);
   const QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
 
+#ifndef Q_OS_ANDROID
+  TriggerScan *triggerScan = new TriggerScan(posModel, &app);
+  InterfaceModel *interfaceModel = new InterfaceModel(&app);
+  QObject::connect(interfaceModel, &InterfaceModel::currentInterfaceChanged,
+                   triggerScan, &TriggerScan::setInterfaceIndex);
   ctxt->setContextProperty("triggerScan", triggerScan);
-  ctxt->setContextProperty("posModel", posModel);
   ctxt->setContextProperty("interfaceModel", interfaceModel);
+#endif
+
+  ctxt->setContextProperty("posModel", posModel);
   ctxt->setContextProperty("document", document);
   ctxt->setContextProperty("fixedFont", fixedFont);
   ctxt->setContextProperty("heatMapCalc", heatMapCalc);

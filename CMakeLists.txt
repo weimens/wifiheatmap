@@ -11,33 +11,27 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# QtCreator supports the following variables for Android, which are identical to qmake Android variables.
-# Check http://doc.qt.io/qt-5/deployment-android.html for more information.
-# They need to be set before the find_package(Qt5 ...) call.
+find_package(CGAL)
+if(ANDROID)
+    set(QUAZIP_LIB_VERSION_SUFFIX 5)
+    find_package(QuaZip5 REQUIRED CONFIG)
+    set(ANDROID_EXTRA_LIBS ${QUAZIP_LIBRARIES})
+endif()
 
-#if(ANDROID)
-#    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
-#    if (ANDROID_ABI STREQUAL "armeabi-v7a")
-#        set(ANDROID_EXTRA_LIBS
-#            ${CMAKE_CURRENT_SOURCE_DIR}/path/to/libcrypto.so
-#            ${CMAKE_CURRENT_SOURCE_DIR}/path/to/libssl.so)
-#    endif()
-#endif()
+if(NOT ANDROID)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(NL3 REQUIRED libnl-3.0 libnl-genl-3.0)
+    set(QUAZIP_LIB_VERSION_SUFFIX 5) #WORKAROUND: QuaZip5Find only works if Qt5 is already found.
+    find_package(QuaZip5 REQUIRED)
+endif()
 
 find_package(Qt5 5.13 COMPONENTS Core Quick Widgets REQUIRED)
-find_package(CGAL)
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(NL3 REQUIRED libnl-3.0 libnl-genl-3.0)
-find_package(QuaZip5 REQUIRED)
 
 set(HEADERS
     measurementmodel.h
     heatmap.h
-    netlinkwrapper.h
-    interfacemodel.h
     bssmodel.h
     document.h
-    trigger_scan.h
     qmlsortfilterproxymodel.h
     imageprovider.h
     measurements.h
@@ -46,16 +40,26 @@ set(SOURCES
     main.cpp
     measurementmodel.cpp
     heatmap.cpp
-    netlinkwrapper.cpp
-    interfacemodel.cpp
     bssmodel.cpp
     document.cpp
-    trigger_scan.cpp
     qmlsortfilterproxymodel.cpp
     imageprovider.cpp
     measurements.cpp
     )
 set(RESOURCES qml.qrc)
+
+if(NOT ANDROID)
+    list(APPEND HEADERS
+        trigger_scan.h
+        netlinkwrapper.h
+        interfacemodel.h
+    )
+    list(APPEND SOURCES
+        trigger_scan.cpp
+        netlinkwrapper.cpp
+        interfacemodel.cpp
+    )
+endif()
 
 if(ANDROID)
     add_library(${PROJECT_NAME} SHARED
@@ -71,8 +75,10 @@ else()
     )
 endif()
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${NL3_INCLUDE_DIRS})
 target_include_directories(${PROJECT_NAME} PRIVATE ${QUAZIP_INCLUDE_DIRS})
+if(NOT ANDROID)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${NL3_INCLUDE_DIRS})
+endif()
 
 target_compile_definitions(${PROJECT_NAME}
   PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
@@ -80,9 +86,9 @@ target_compile_definitions(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
   PRIVATE Qt5::Core Qt5::Quick Qt5::Widgets)
 target_link_libraries(${PROJECT_NAME} PRIVATE CGAL::CGAL)
-target_link_libraries(${PROJECT_NAME} PRIVATE ${NL3_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${QUAZIP_LIBRARIES})
-
-add_subdirectory(trigger_scan)
-
-install(TARGETS ${PROJECT_NAME} DESTINATION bin)
+if(NOT ANDROID)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${NL3_LIBRARIES})
+    add_subdirectory(trigger_scan)
+    install(TARGETS ${PROJECT_NAME} DESTINATION bin)
+endif()

@@ -253,7 +253,7 @@ ApplicationWindow {
 
     ToolButton {
         id: toolButton
-        text: "\u2630"
+        text: "\u2261"
         font.pixelSize: Qt.application.font.pixelSize * 1.6
         onClicked: sidebar.open()
     }

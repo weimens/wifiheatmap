@@ -8,6 +8,10 @@
 #include <quazip5/quazip.h>
 #include <quazip5/quazipfile.h>
 
+#ifdef Q_OS_ANDROID
+#include "androidhelper.h"
+#endif
+
 Document::Document(QObject *parent) : QObject(parent) {}
 
 void Document::newDocument() {
@@ -161,7 +165,18 @@ void Document::setNeedsSaving(bool value) {
 }
 
 void Document::setMapImageUrl(const QUrl &mapImageUrl) {
+#ifdef Q_OS_ANDROID
+  if (mapImageUrl.scheme() == "content") {
+    if (!checkPermission("READ_EXTERNAL_STORAGE")) {
+      return;
+    }
+    setMapImage(imageFromContentUrl(mapImageUrl));
+  } else {
+    setMapImage(QImage(mapImageUrl.path()));
+  }
+#else
   setMapImage(QImage(mapImageUrl.path()));
+#endif
 }
 
 bool Document::needsSaving() const { return mNeedsSaving; }

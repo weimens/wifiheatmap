@@ -54,12 +54,12 @@ set(RESOURCES qml.qrc)
 
 if(NOT ANDROID)
     list(APPEND HEADERS
-        trigger_scan.h
+        linuxscan.h
         netlinkwrapper.h
         interfacemodel.h
     )
     list(APPEND SOURCES
-        trigger_scan.cpp
+        linuxscan.cpp
         netlinkwrapper.cpp
         interfacemodel.cpp
     )

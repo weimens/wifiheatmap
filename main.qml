@@ -192,8 +192,8 @@ ApplicationWindow {
                     anchors.fill: parent
                     onClicked: {
                         if (Qt.platform.os == "linux") {
-                            if (triggerScan.running) {
-                                triggerScan.measure(Qt.point(mouse.x, mouse.y))
+                            if (linuxScan.running) {
+                                linuxScan.measure(Qt.point(mouse.x, mouse.y))
                             } else {
                                 messageDialog.text = "Scan process is not running!"
                                 messageDialog.visible = true
@@ -309,8 +309,8 @@ ApplicationWindow {
 
             Button {
                 visible: Qt.platform.os == "linux"
-                text: Qt.platform.os == "linux" && triggerScan.running ? "stop scan process" : "start scan process"
-                onClicked: Qt.platform.os == "linux" && triggerScan.start_scanner()
+                text: Qt.platform.os == "linux" && linuxScan.running ? "stop scan process" : "start scan process"
+                onClicked: Qt.platform.os == "linux" && linuxScan.start_scanner()
                 Layout.fillWidth: true
                 Layout.topMargin: 5
             }

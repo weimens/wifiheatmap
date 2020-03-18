@@ -14,7 +14,7 @@
 
 #ifndef Q_OS_ANDROID
 #include "interfacemodel.h"
-#include "trigger_scan.h"
+#include "linuxscan.h"
 #endif
 
 #ifdef Q_OS_ANDROID
@@ -45,11 +45,11 @@ int main(int argc, char *argv[]) {
   const QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
 
 #ifndef Q_OS_ANDROID
-  TriggerScan *triggerScan = new TriggerScan(posModel, &app);
+  LinuxScan *linuxScan = new LinuxScan(posModel, &app);
   InterfaceModel *interfaceModel = new InterfaceModel(&app);
   QObject::connect(interfaceModel, &InterfaceModel::currentInterfaceChanged,
-                   triggerScan, &TriggerScan::setInterfaceIndex);
-  ctxt->setContextProperty("triggerScan", triggerScan);
+                   linuxScan, &LinuxScan::setInterfaceIndex);
+  ctxt->setContextProperty("linuxScan", linuxScan);
   ctxt->setContextProperty("interfaceModel", interfaceModel);
 #endif
 

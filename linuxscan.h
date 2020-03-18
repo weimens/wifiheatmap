@@ -9,15 +9,15 @@
 #include "measurementmodel.h"
 #include "measurements.h"
 
-class TriggerScan : public QObject {
+class LinuxScan : public QObject {
   Q_OBJECT
 
   Q_PROPERTY(bool running MEMBER mRunning NOTIFY runningChanged)
   Q_PROPERTY(int interfaceIndex WRITE setInterfaceIndex)
 
 public:
-  TriggerScan(MeasurementModel *measurementModel, QObject *parent = nullptr);
-  virtual ~TriggerScan();
+  LinuxScan(MeasurementModel *measurementModel, QObject *parent = nullptr);
+  virtual ~LinuxScan();
 
   Q_INVOKABLE void start_scanner();
 

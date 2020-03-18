@@ -125,3 +125,5 @@ if(NOT ANDROID)
     add_subdirectory(trigger_scan)
     install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 endif()
+
+add_subdirectory(tests)

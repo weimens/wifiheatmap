@@ -3,13 +3,11 @@
 #include <QAbstractListModel>
 #include <QPoint>
 
-#include "document.h"
 #include "measurements.h"
 
 class MeasurementModel : public QAbstractListModel {
   Q_OBJECT
   Q_ENUMS(Roles)
-  Q_PROPERTY(Measurements *measurements READ measurements WRITE setMeasurements)
 
 public:
   enum Roles {
@@ -18,7 +16,7 @@ public:
     stateRole,
   };
 
-  MeasurementModel(Document *document, QObject *parent = nullptr);
+  explicit MeasurementModel(QObject *parent = nullptr);
 
   QHash<int, QByteArray> roleNames() const override;
 
@@ -34,7 +32,7 @@ public:
 
   QList<MeasurementItem> getMeasurementItems();
 
-  void setMeasurements(Measurements *measurements);
+  void measurementsChanged(Measurements *measurements);
 
   Qt::ItemFlags flags(const QModelIndex &index) const override;
 

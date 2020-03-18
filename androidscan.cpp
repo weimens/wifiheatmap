@@ -6,14 +6,8 @@
 #include <QtAndroid>
 #include <functional>
 
-AndroidScan::AndroidScan(MeasurementModel *measurementModel, QObject *parent)
+AndroidScan::AndroidScan(QObject *parent)
     : QObject(parent) {
-  connect(this, &AndroidScan::scanFinished, measurementModel,
-          &MeasurementModel::scanFinished);
-  connect(this, &AndroidScan::scanFailed, measurementModel,
-          &MeasurementModel::scanFailed);
-  connect(this, &AndroidScan::scanStarted, measurementModel,
-          &MeasurementModel::scanStarted);
   registerNativeMethods();
 }
 

@@ -6,7 +6,6 @@
 #include <QProcess>
 #include <QTimer>
 
-#include "measurementmodel.h"
 #include "measurements.h"
 
 class LinuxScan : public QObject {
@@ -16,7 +15,7 @@ class LinuxScan : public QObject {
   Q_PROPERTY(int interfaceIndex WRITE setInterfaceIndex)
 
 public:
-  LinuxScan(MeasurementModel *measurementModel, QObject *parent = nullptr);
+  explicit LinuxScan(QObject *parent = nullptr);
   virtual ~LinuxScan();
 
   Q_INVOKABLE void start_scanner();

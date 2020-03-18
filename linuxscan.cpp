@@ -1,15 +1,8 @@
 #include "linuxscan.h"
 #include "netlinkwrapper.h"
 
-LinuxScan::LinuxScan(MeasurementModel *measurementModel, QObject *parent)
+LinuxScan::LinuxScan(QObject *parent)
     : QObject(parent), mScanning(false), mScanNum(0), mRunning(false) {
-
-  connect(this, &LinuxScan::scanFinished, measurementModel,
-          &MeasurementModel::scanFinished);
-  connect(this, &LinuxScan::scanFailed, measurementModel,
-          &MeasurementModel::scanFailed);
-  connect(this, &LinuxScan::scanStarted, measurementModel,
-          &MeasurementModel::scanStarted);
 
   mScanner = new QProcess(this);
   connect(mScanner, &QProcess::readyReadStandardOutput, this,

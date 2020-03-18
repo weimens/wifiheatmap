@@ -1,11 +1,8 @@
 #include "measurementmodel.h"
 
-MeasurementModel::MeasurementModel(Document *document, QObject *parent)
+MeasurementModel::MeasurementModel(QObject *parent)
     : QAbstractListModel(parent), mScanIndex(QPersistentModelIndex()),
       mMeasurements(nullptr) {
-  connect(document, &Document::measurementsChanged, this,
-          &MeasurementModel::setMeasurements);
-  setMeasurements(document->measurements());
 }
 
 QHash<int, QByteArray> MeasurementModel::roleNames() const {
@@ -98,7 +95,7 @@ void MeasurementModel::scanStarted(QPoint pos) {
 
 Measurements *MeasurementModel::measurements() const { return mMeasurements; }
 
-void MeasurementModel::setMeasurements(Measurements *measurements) {
+void MeasurementModel::measurementsChanged(Measurements *measurements) {
   beginResetModel();
 
   if (measurements)

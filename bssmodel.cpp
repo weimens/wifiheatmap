@@ -1,14 +1,10 @@
 #include "bssmodel.h"
 
-BssModel::BssModel(Document *document, QObject *parent)
+BssModel::BssModel(QObject *parent)
     : QStandardItemModel(parent) {
   setItemRoleNames(
       {{Qt::DisplayRole, "display"}, {Qt::CheckStateRole, "checkstate"}});
   connect(this, &BssModel::dataChanged, this, &BssModel::selectionChanged);
-
-  connect(document, &Document::measurementsChanged, this,
-          &BssModel::measurementsChanged);
-  measurementsChanged(document->measurements());
 }
 
 void BssModel::setHeader() {

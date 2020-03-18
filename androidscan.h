@@ -2,13 +2,12 @@
 
 #include <QObject>
 
-#include "measurementmodel.h"
 #include "measurements.h"
 
 class AndroidScan : public QObject {
   Q_OBJECT
 public:
-  AndroidScan(MeasurementModel *measurementModel, QObject *parent);
+  explicit AndroidScan(QObject *parent);
 
   Q_INVOKABLE bool measure(QPoint pos);
 

@@ -34,18 +34,31 @@ int main(int argc, char *argv[]) {
   Document *document = new Document(&app);
   document->newDocument();
 
-  MeasurementModel *posModel = new MeasurementModel(document, &app);
+  MeasurementModel *posModel = new MeasurementModel(&app);
+  QObject::connect(document, &Document::measurementsChanged, posModel,
+                   &MeasurementModel::measurementsChanged);
+  posModel->measurementsChanged(document->measurements());
+
   HeatMapProvider *heatmap = new HeatMapProvider();
   engine.addImageProvider(QLatin1String("heatmap"), heatmap);
   ImageProvider *imageProvider = new ImageProvider(document);
   engine.addImageProvider(QLatin1String("document"), imageProvider);
   HeatMapCalc *heatMapCalc = new HeatMapCalc(heatmap, document, document);
 
-  BssModel bssModel(document);
+  BssModel bssModel;
+  QObject::connect(document, &Document::measurementsChanged, &bssModel,
+                   &BssModel::measurementsChanged);
+  bssModel.measurementsChanged(document->measurements());
   const QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
 
 #ifndef Q_OS_ANDROID
-  LinuxScan *linuxScan = new LinuxScan(posModel, &app);
+  LinuxScan *linuxScan = new LinuxScan(&app);
+  QObject::connect(linuxScan, &LinuxScan::scanFinished, posModel,
+                   &MeasurementModel::scanFinished);
+  QObject::connect(linuxScan, &LinuxScan::scanFailed, posModel,
+                   &MeasurementModel::scanFailed);
+  QObject::connect(linuxScan, &LinuxScan::scanStarted, posModel,
+                   &MeasurementModel::scanStarted);
   InterfaceModel *interfaceModel = new InterfaceModel(&app);
   QObject::connect(interfaceModel, &InterfaceModel::currentInterfaceChanged,
                    linuxScan, &LinuxScan::setInterfaceIndex);
@@ -54,7 +67,13 @@ int main(int argc, char *argv[]) {
 #endif
 
 #ifdef Q_OS_ANDROID
-  AndroidScan *androidScan = new AndroidScan(posModel, &app);
+  AndroidScan *androidScan = new AndroidScan(&app);
+  QObject::connect(androidScan, &AndroidScan::scanFinished, posModel,
+                   &MeasurementModel::scanFinished);
+  QObject::connect(androidScan, &AndroidScan::scanFailed, posModel,
+                   &MeasurementModel::scanFailed);
+  QObject::connect(androidScan, &AndroidScan::scanStarted, posModel,
+                   &MeasurementModel::scanStarted);
   ctxt->setContextProperty("androidScan", androidScan);
 #endif
 

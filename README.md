@@ -31,7 +31,7 @@ Basic Usage
 
 Compiling
 ---------
-Please note that wifiheatmap is currently only tested on Fedora 31.
+Please note that wifiheatmap is currently only tested on Fedora 31. If you want to compile wifiheatmap for android take a look at [wifiheatmap-superbuild](https://github.com/weimens/wifiheatmap-superbuild)
 
 Install dependencies,
 ```

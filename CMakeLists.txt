@@ -38,16 +38,14 @@ if(ANDROID)
     find_package(Qt5 COMPONENTS AndroidExtras REQUIRED)
 endif()
 
-set(HEADERS
-    measurementmodel.h
-    heatmap.h
-    bssmodel.h
-    document.h
-    qmlsortfilterproxymodel.h
-    imageprovider.h
-    measurements.h
-    )
-set(SOURCES
+
+if(ANDROID)
+    add_library(${PROJECT_NAME} SHARED)
+else()
+    add_executable(${PROJECT_NAME})
+endif()
+
+target_sources(${PROJECT_NAME} PRIVATE
     main.cpp
     measurementmodel.cpp
     heatmap.cpp
@@ -56,46 +54,36 @@ set(SOURCES
     qmlsortfilterproxymodel.cpp
     imageprovider.cpp
     measurements.cpp
-    )
-set(RESOURCES qml.qrc)
 
-if(NOT ANDROID)
-    list(APPEND HEADERS
+    measurementmodel.h
+    heatmap.h
+    bssmodel.h
+    document.h
+    qmlsortfilterproxymodel.h
+    imageprovider.h
+    measurements.h
+
+    qml.qrc
+)
+
+if(ANDROID)
+    target_sources(${PROJECT_NAME} PRIVATE
+        androidscan.cpp
+        androidhelper.cpp
+        androidscan.h
+        androidhelper.h
+    )
+else()
+    target_sources(${PROJECT_NAME} PRIVATE
+        linuxscan.cpp
+        netlinkwrapper.cpp
+        interfacemodel.cpp
         linuxscan.h
         netlinkwrapper.h
         interfacemodel.h
     )
-    list(APPEND SOURCES
-        linuxscan.cpp
-        netlinkwrapper.cpp
-        interfacemodel.cpp
-    )
 endif()
 
-if(ANDROID)
-    list(APPEND HEADERS
-        androidscan.h
-        androidhelper.h
-    )
-    list(APPEND SOURCES
-        androidscan.cpp
-        androidhelper.cpp
-    )
-endif()
-
-if(ANDROID)
-    add_library(${PROJECT_NAME} SHARED
-        ${SOURCES}
-        ${HEADERS}
-        ${RESOURCES}
-    )
-else()
-    add_executable(${PROJECT_NAME}
-        ${SOURCES}
-        ${HEADERS}
-        ${RESOURCES}
-    )
-endif()
 
 set_target_properties(${PROJECT_NAME}
   PROPERTIES

@@ -96,6 +96,17 @@ set_target_properties(${PROJECT_NAME}
 )
 target_compile_definitions(${PROJECT_NAME}
   PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
+if(NOT ANDROID)
+    if(TRIGGER_SCAN_BIN)
+        target_compile_definitions(${PROJECT_NAME}
+            PRIVATE TRIGGER_SCAN_BIN="${TRIGGER_SCAN_BIN}"
+        )
+    else()
+        target_compile_definitions(${PROJECT_NAME}
+            PRIVATE TRIGGER_SCAN_BIN="$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/trigger_scan/wifiheatmap_trigger_scan>$<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/bin/wifiheatmap_trigger_scan>"
+        )
+    endif()
+endif()
 
 target_link_libraries(${PROJECT_NAME}
   PRIVATE

@@ -44,7 +44,7 @@ void LinuxScan::start_scanner() {
   }
   QString program = "pkexec";
   QStringList arguments;
-  arguments << "/usr/bin/wifiheatmap_trigger_scan";
+  arguments << TRIGGER_SCAN_BIN;
 
   mScanner->start(program, arguments);
   if (!mScanner->waitForStarted()) {

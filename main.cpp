@@ -12,13 +12,11 @@
 #include "measurementmodel.h"
 #include "qmlsortfilterproxymodel.h"
 
-#ifndef Q_OS_ANDROID
-#include "interfacemodel.h"
-#include "linuxscan.h"
-#endif
-
 #ifdef Q_OS_ANDROID
 #include "androidscan.h"
+#elif defined(Q_OS_LINUX)
+#include "interfacemodel.h"
+#include "linuxscan.h"
 #endif
 
 int main(int argc, char *argv[]) {
@@ -51,7 +49,16 @@ int main(int argc, char *argv[]) {
   bssModel.measurementsChanged(document->measurements());
   const QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
 
-#ifndef Q_OS_ANDROID
+#ifdef Q_OS_ANDROID
+    AndroidScan *androidScan = new AndroidScan(&app);
+    QObject::connect(androidScan, &AndroidScan::scanFinished, posModel,
+                     &MeasurementModel::scanFinished);
+    QObject::connect(androidScan, &AndroidScan::scanFailed, posModel,
+                     &MeasurementModel::scanFailed);
+    QObject::connect(androidScan, &AndroidScan::scanStarted, posModel,
+                     &MeasurementModel::scanStarted);
+    ctxt->setContextProperty("androidScan", androidScan);
+#elif defined(Q_OS_LINUX)
   LinuxScan *linuxScan = new LinuxScan(&app);
   QObject::connect(linuxScan, &LinuxScan::scanFinished, posModel,
                    &MeasurementModel::scanFinished);
@@ -64,17 +71,6 @@ int main(int argc, char *argv[]) {
                    linuxScan, &LinuxScan::setInterfaceIndex);
   ctxt->setContextProperty("linuxScan", linuxScan);
   ctxt->setContextProperty("interfaceModel", interfaceModel);
-#endif
-
-#ifdef Q_OS_ANDROID
-  AndroidScan *androidScan = new AndroidScan(&app);
-  QObject::connect(androidScan, &AndroidScan::scanFinished, posModel,
-                   &MeasurementModel::scanFinished);
-  QObject::connect(androidScan, &AndroidScan::scanFailed, posModel,
-                   &MeasurementModel::scanFailed);
-  QObject::connect(androidScan, &AndroidScan::scanStarted, posModel,
-                   &MeasurementModel::scanStarted);
-  ctxt->setContextProperty("androidScan", androidScan);
 #endif
 
   ctxt->setContextProperty("posModel", posModel);

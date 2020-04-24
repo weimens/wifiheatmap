@@ -8,9 +8,12 @@ if(ANDROID)
     set(QUAZIP_LIB_VERSION_SUFFIX 5)
     find_package(QuaZip5 REQUIRED CONFIG)
     set(ANDROID_EXTRA_LIBS ${QUAZIP_LIBRARIES})
+else()
+    set(QUAZIP_LIB_VERSION_SUFFIX 5) #WORKAROUND: QuaZip5Find only works if Qt5 is already found.
+    find_package(QuaZip5 REQUIRED)
 endif()
 
-if(NOT ANDROID)
+if(UNIX AND NOT ANDROID)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(GENL3 REQUIRED libnl-3.0 libnl-genl-3.0)
     add_library(nl3::genl INTERFACE IMPORTED)
@@ -19,9 +22,6 @@ if(NOT ANDROID)
         INTERFACE_INCLUDE_DIRECTORIES "${GENL3_INCLUDE_DIRS}"
         INTERFACE_LINK_LIBRARIES "${GENL3_LIBRARIES}"
     )
-
-    set(QUAZIP_LIB_VERSION_SUFFIX 5) #WORKAROUND: QuaZip5Find only works if Qt5 is already found.
-    find_package(QuaZip5 REQUIRED)
 endif()
 
 if (NOT TARGET QuaZip5::QuaZip5)
@@ -73,7 +73,8 @@ if(ANDROID)
         androidscan.h
         androidhelper.h
     )
-else()
+endif()
+if(UNIX AND NOT ANDROID)
     target_sources(${PROJECT_NAME} PRIVATE
         linuxscan.cpp
         netlinkwrapper.cpp
@@ -96,7 +97,7 @@ set_target_properties(${PROJECT_NAME}
 )
 target_compile_definitions(${PROJECT_NAME}
   PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
-if(NOT ANDROID)
+if(UNIX AND NOT ANDROID)
     if(TRIGGER_SCAN_BIN)
         target_compile_definitions(${PROJECT_NAME}
             PRIVATE TRIGGER_SCAN_BIN="${TRIGGER_SCAN_BIN}"
@@ -119,10 +120,12 @@ target_link_libraries(${PROJECT_NAME}
 if(ANDROID)
     target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::AndroidExtras)
 endif()
-if(NOT ANDROID)
+if(UNIX AND NOT ANDROID)
     target_link_libraries(${PROJECT_NAME} PRIVATE nl3::genl)
     add_subdirectory(trigger_scan)
     install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 endif()
 
-add_subdirectory(tests)
+if(NOT ANDROID)
+    add_subdirectory(tests)
+endif()

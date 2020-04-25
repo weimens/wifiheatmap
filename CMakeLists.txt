@@ -33,7 +33,7 @@ if (NOT TARGET QuaZip5::QuaZip5)
   )
 endif()
 
-find_package(Qt5 5.13 COMPONENTS Core Quick Widgets REQUIRED)
+find_package(Qt5 5.12 COMPONENTS Core Quick Widgets REQUIRED)
 if(ANDROID)
     find_package(Qt5 COMPONENTS AndroidExtras REQUIRED)
 endif()

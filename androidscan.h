@@ -1,8 +1,9 @@
 #pragma once
 
 #include <QObject>
+#include <QPoint>
 
-#include "measurements.h"
+#include "scaninfo.h"
 
 class AndroidScan : public QObject {
   Q_OBJECT

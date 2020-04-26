@@ -62,6 +62,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     qmlsortfilterproxymodel.h
     imageprovider.h
     measurements.h
+    scaninfo.h
 
     qml.qrc
 )

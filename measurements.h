@@ -4,14 +4,7 @@
 #include <QPoint>
 #include <QVector>
 
-struct ScanInfo {
-  QString bssid;
-  QString ssid;
-  int lastSeen;
-  int freq;
-  float signal;
-  int channel;
-};
+#include "scaninfo.h"
 
 struct MeasurementItem {
   QPoint pos;

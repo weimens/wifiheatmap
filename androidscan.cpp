@@ -6,8 +6,7 @@
 #include <QtAndroid>
 #include <functional>
 
-AndroidScan::AndroidScan(QObject *parent)
-    : QObject(parent) {
+AndroidScan::AndroidScan(QObject *parent) : QObject(parent) {
   registerNativeMethods();
 }
 

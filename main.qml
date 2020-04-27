@@ -309,8 +309,10 @@ ApplicationWindow {
 
             Button {
                 visible: Qt.platform.os == "linux"
-                text: Qt.platform.os == "linux" && linuxScan.running ? "stop scan process" : "start scan process"
-                onClicked: Qt.platform.os == "linux" && linuxScan.start_scanner()
+                text: Qt.platform.os == "linux"
+                      && linuxScan.running ? "stop scan process" : "start scan process"
+                onClicked: Qt.platform.os == "linux"
+                           && linuxScan.start_scanner()
                 Layout.fillWidth: true
                 Layout.topMargin: 5
             }

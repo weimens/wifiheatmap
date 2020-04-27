@@ -2,8 +2,7 @@
 
 MeasurementModel::MeasurementModel(QObject *parent)
     : QAbstractListModel(parent), mScanIndex(QPersistentModelIndex()),
-      mMeasurements(nullptr) {
-}
+      mMeasurements(nullptr) {}
 
 QHash<int, QByteArray> MeasurementModel::roleNames() const {
   return {

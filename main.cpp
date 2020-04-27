@@ -50,14 +50,14 @@ int main(int argc, char *argv[]) {
   const QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
 
 #ifdef Q_OS_ANDROID
-    AndroidScan *androidScan = new AndroidScan(&app);
-    QObject::connect(androidScan, &AndroidScan::scanFinished, posModel,
-                     &MeasurementModel::scanFinished);
-    QObject::connect(androidScan, &AndroidScan::scanFailed, posModel,
-                     &MeasurementModel::scanFailed);
-    QObject::connect(androidScan, &AndroidScan::scanStarted, posModel,
-                     &MeasurementModel::scanStarted);
-    ctxt->setContextProperty("androidScan", androidScan);
+  AndroidScan *androidScan = new AndroidScan(&app);
+  QObject::connect(androidScan, &AndroidScan::scanFinished, posModel,
+                   &MeasurementModel::scanFinished);
+  QObject::connect(androidScan, &AndroidScan::scanFailed, posModel,
+                   &MeasurementModel::scanFailed);
+  QObject::connect(androidScan, &AndroidScan::scanStarted, posModel,
+                   &MeasurementModel::scanStarted);
+  ctxt->setContextProperty("androidScan", androidScan);
 #elif defined(Q_OS_LINUX)
   LinuxScan *linuxScan = new LinuxScan(&app);
   QObject::connect(linuxScan, &LinuxScan::scanFinished, posModel,

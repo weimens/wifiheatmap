@@ -1,7 +1,6 @@
 #include "bssmodel.h"
 
-BssModel::BssModel(QObject *parent)
-    : QStandardItemModel(parent) {
+BssModel::BssModel(QObject *parent) : QStandardItemModel(parent) {
   setItemRoleNames(
       {{Qt::DisplayRole, "display"}, {Qt::CheckStateRole, "checkstate"}});
   connect(this, &BssModel::dataChanged, this, &BssModel::selectionChanged);

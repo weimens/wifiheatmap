@@ -54,6 +54,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     qmlsortfilterproxymodel.cpp
     imageprovider.cpp
     measurements.cpp
+    helper.cpp
 
     measurementmodel.h
     heatmap.h
@@ -63,6 +64,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     imageprovider.h
     measurements.h
     scaninfo.h
+    helper.h
 
     qml.qrc
 )

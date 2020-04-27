@@ -202,6 +202,9 @@ ApplicationWindow {
                         if (Qt.platform.os == "android") {
                             androidScan.measure(Qt.point(mouse.x, mouse.y))
                         }
+                        if (Qt.platform.os == "windows") {
+                            windowsScan.measure(Qt.point(mouse.x, mouse.y))
+                        }
                     }
                 }
             }
@@ -319,8 +322,10 @@ ApplicationWindow {
 
             ComboBox {
                 visible: Qt.platform.os == "linux"
+                         || Qt.platform.os == "windows"
                 id: interfaceComboBox
-                model: Qt.platform.os == "linux" ? interfaceModel : undefined
+                model: (Qt.platform.os == "linux"
+                        || Qt.platform.os == "windows") ? interfaceModel : undefined
                 textRole: "name"
                 Layout.fillWidth: true
 

@@ -17,6 +17,9 @@
 #elif defined(Q_OS_LINUX)
 #include "interfacemodel.h"
 #include "linuxscan.h"
+#elif defined(Q_OS_WIN)
+#include "windowsinterfacemodel.h"
+#include "windowsscan.h"
 #endif
 
 int main(int argc, char *argv[]) {
@@ -71,6 +74,21 @@ int main(int argc, char *argv[]) {
                    linuxScan, &LinuxScan::setInterfaceIndex);
   ctxt->setContextProperty("linuxScan", linuxScan);
   ctxt->setContextProperty("interfaceModel", interfaceModel);
+#elif defined(Q_OS_WIN)
+  WindowsScan *windowsScan = new WindowsScan(&app);
+  QObject::connect(windowsScan, &WindowsScan::scanFinished, posModel,
+                   &MeasurementModel::scanFinished);
+  QObject::connect(windowsScan, &WindowsScan::scanFailed, posModel,
+                   &MeasurementModel::scanFailed);
+  QObject::connect(windowsScan, &WindowsScan::scanStarted, posModel,
+                   &MeasurementModel::scanStarted);
+  WindowsInterfaceModel *windowsInterfaceModel =
+      new WindowsInterfaceModel(&app);
+  QObject::connect(windowsInterfaceModel,
+                   &WindowsInterfaceModel::currentInterfaceChanged, windowsScan,
+                   &WindowsScan::setInterfaceIndex);
+  ctxt->setContextProperty("windowsScan", windowsScan);
+  ctxt->setContextProperty("interfaceModel", windowsInterfaceModel);
 #endif
 
   ctxt->setContextProperty("posModel", posModel);

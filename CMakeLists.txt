@@ -87,7 +87,18 @@ if(UNIX AND NOT ANDROID)
         interfacemodel.h
     )
 endif()
-
+if(WIN32)
+    target_sources(${PROJECT_NAME} PRIVATE
+        windowsscan.cpp
+        wlanapiwrapper.cpp
+        windowsscantrigger.cpp
+        windowsinterfacemodel.cpp
+        windowsscan.h
+        wlanapiwrapper.h
+        windowsscantrigger.h
+        windowsinterfacemodel.h
+    )
+endif()
 
 set_target_properties(${PROJECT_NAME}
   PROPERTIES

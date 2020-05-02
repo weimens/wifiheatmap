@@ -27,6 +27,10 @@ private:
 
 class HeatMapCalc : public QObject {
   Q_OBJECT
+
+  Q_PROPERTY(double zmax READ zmax WRITE setZmax NOTIFY zmaxChanged)
+  Q_PROPERTY(double zmin READ zmin WRITE setZmin NOTIFY zminChanged)
+
 public:
   HeatMapCalc(HeatMapProvider *heatMapProvider, Document *document,
               QObject *parent = nullptr);
@@ -34,10 +38,23 @@ public:
   void measurementsChanged(Measurements *measurements);
 
   void generateHeatMap();
+
+  void setZmax(double max);
+  void setZmin(double min);
+
+  double zmax();
+  double zmin();
+
 signals:
   void heatMapReady();
+  void zmaxChanged(long max);
+  void zminChanged(long min);
 
 private:
   HeatMapProvider *mHeatMapProvider;
   Document *mDocument;
+  std::vector<std::vector<double>> heatmapZ;
+  void generateImage();
+  double mZmin{-80};
+  double mZmax{-54};
 };

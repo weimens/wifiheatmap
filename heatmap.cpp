@@ -1,5 +1,7 @@
 #include "heatmap.h"
 
+#include <algorithm>
+
 //#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
@@ -138,16 +140,6 @@ void HeatMapCalc::generateHeatMap() {
     ny = maxsize;
   }
 
-  int zmin = -80;
-  int zmax = -54;
-
-  QImage image = QImage(nx, ny, QImage::Format_Indexed8);
-  int colorCount = colors.size() - 1;
-  image.setColorCount(colorCount + 1);
-  for (int i = 0; i < colors.size(); ++i) {
-    image.setColor(i, colors[i]);
-  }
-
   for (int i = 0; i < mDocument->measurements()->items().size(); ++i) {
     qreal z = mDocument->measurements()->maxZAt(i);
     if (!std::isnan(z)) {
@@ -156,46 +148,82 @@ void HeatMapCalc::generateHeatMap() {
     }
   }
 
-  if (value_function.size() < 3) {
-    for (int i = 0; i < nx; ++i) {
-      for (int j = 0; j < ny; ++j) {
-        image.setPixel(i, j, 0);
-      }
-    }
-    mHeatMapProvider->setHeatMapImage(image);
-    emit heatMapReady();
-    return;
-  }
-
   for (auto coord : value_function) {
     T.insert(coord.first);
   }
 
-  double x, y, z;
+  heatmapZ = std::vector<std::vector<double>>(nx, std::vector<double>(ny, NAN));
+
+  if (value_function.size() >= 3) {
+    double x, y;
+    for (int i = 0; i < nx; ++i) {
+      for (int j = 0; j < ny; ++j) {
+        x = i / static_cast<double>(nx) * w;
+        y = j / static_cast<double>(ny) * h;
+
+        std::vector<std::pair<Point, Coord_type>> coords;
+        Point p = Point(x, y);
+
+        auto res = CGAL::natural_neighbor_coordinates_2(
+            T, p, std::back_inserter(coords));
+        Coord_type norm = res.second;
+        bool success = res.third;
+        if (success) {
+          Coord_type res = CGAL::linear_interpolation(
+              coords.begin(), coords.end(), norm, Value_access(value_function));
+          heatmapZ[i][j] = CGAL::to_double(res);
+        }
+      }
+    }
+  }
+  generateImage();
+}
+
+void HeatMapCalc::setZmax(double max) {
+  if (mZmax == max)
+    return;
+  mZmax = max;
+  emit zmaxChanged(max);
+  generateImage();
+}
+
+void HeatMapCalc::setZmin(double min) {
+  if (mZmin == min)
+    return;
+  mZmin = min;
+  emit zminChanged(min);
+  generateImage();
+}
+
+double HeatMapCalc::zmax() { return mZmax; }
+
+double HeatMapCalc::zmin() { return mZmin; }
+
+void HeatMapCalc::generateImage() {
+  int nx = heatmapZ.size();
+  if (nx <= 0)
+    return;
+  int ny = heatmapZ[0].size();
+  if (nx <= 0)
+    return;
+
+  QImage image = QImage(nx, ny, QImage::Format_Indexed8);
+  int colorCount = colors.size() - 1;
+  image.setColorCount(colorCount + 1);
+  for (int i = 0; i < colors.size(); ++i) {
+    image.setColor(i, colors[i]);
+  }
+
   for (int i = 0; i < nx; ++i) {
     for (int j = 0; j < ny; ++j) {
-      x = i / static_cast<double>(nx) * w;
-      y = j / static_cast<double>(ny) * h;
-
-      std::vector<std::pair<Point, Coord_type>> coords;
-      Point p = Point(x, y);
-
-      auto res = CGAL::natural_neighbor_coordinates_2(
-          T, p, std::back_inserter(coords));
-      Coord_type norm = res.second;
-      bool success = res.third;
-      if (success) {
-        Coord_type res = CGAL::linear_interpolation(
-            coords.begin(), coords.end(), norm, Value_access(value_function));
-
-        z = CGAL::to_double(res);
-        if (z < zmin)
-          z = zmin;
-        if (z > zmax)
-          z = zmax;
-        z = 1 - floor((z - zmin) / static_cast<double>(zmin - zmax) *
-                      (colorCount - 1));
-        image.setPixel(i, j, z);
+      double z = heatmapZ[i][j];
+      if (!isnan(z)) {
+        if (z < mZmin)
+          z = mZmin;
+        if (z > mZmax)
+          z = mZmax;
+        z = 1 - floor((z - mZmin) / (mZmin - mZmax) * (colorCount - 1));
+        image.setPixel(i, j, std::max(z, 0.));
       } else {
         image.setPixel(i, j, 0);
       }
@@ -204,5 +232,4 @@ void HeatMapCalc::generateHeatMap() {
 
   mHeatMapProvider->setHeatMapImage(image);
   emit heatMapReady();
-  return;
 }

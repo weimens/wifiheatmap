@@ -261,8 +261,7 @@ ApplicationWindow {
         onClicked: sidebar.open()
     }
 
-    Rectangle {
-        color: "#FFFFFF"
+    Button {
         id: legend
         width: 350
         height: 30
@@ -270,6 +269,7 @@ ApplicationWindow {
         anchors.bottomMargin: 5
         anchors.bottom: parent.bottom
         anchors.right: parent.right
+        onClicked: popup.open()
 
         Image {
             anchors.fill: parent
@@ -279,19 +279,104 @@ ApplicationWindow {
             opacity: 0.5
         }
 
-        RowLayout {
-            anchors.fill: parent
-            Text {
-                text: "-80\u2009dbm"
-                Layout.alignment: Qt.AlignLeft
+        Text {
+            text: heatMapCalc.zmin + "\u2009dbm"
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+        }
+        Text {
+            text: (heatMapCalc.zmin + heatMapCalc.zmax) / 2 + "\u2009dbm"
+            anchors.centerIn: parent
+        }
+        Text {
+            text: heatMapCalc.zmax + "\u2009dbm"
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+        }
+
+        Popup {
+
+            id: popup
+            padding: 0
+
+            parent: Overlay.overlay
+
+            x: parent.width - legend.anchors.rightMargin - width
+            y: parent.height - legend.anchors.bottomMargin - height
+            width: legend.width
+            height: legend.height
+
+            enter: Transition {
+                NumberAnimation {
+                    property: "height"
+                    duration: 0
+                    from: legend.height
+                    to: zminInput.height
+                }
+            }
+            exit: Transition {
+                NumberAnimation {
+                    property: "height"
+                    duration: 0
+                    from: zminInput.height
+                    to: legend.height
+                }
+            }
+
+            Image {
+                anchors.fill: parent
+                sourceSize.width: parent.width
+                sourceSize.height: parent.height
+                source: "image://heatmap/legend/0"
+                opacity: 0.5
+            }
+
+            Row {
+                anchors.left: parent.left
+                Slider {
+                    id: zminInput
+                    value: heatMapCalc.zmin
+                    from: -100
+                    to: 0
+                    stepSize: 1
+                    orientation: Qt.Vertical
+                    Binding {
+                        target: heatMapCalc
+                        property: "zmin"
+                        value: zminInput.value
+                    }
+                }
+                Text {
+                    text: heatMapCalc.zmin + "\u2009dbm"
+                    anchors.top: parent.top
+                }
             }
             Text {
-                text: "-67\u2009dbm"
-                Layout.alignment: Qt.AlignCenter
+                id: zmidText
+                text: (heatMapCalc.zmin + heatMapCalc.zmax) / 2 + "\u2009dbm"
+                anchors.horizontalCenter: parent.horizontalCenter
             }
-            Text {
-                Layout.alignment: Qt.AlignRight
-                text: "-54\u2009dbm"
+
+            Row {
+                anchors.right: parent.right
+
+                Text {
+                    text: heatMapCalc.zmax + "\u2009dbm"
+                    anchors.top: parent.top
+                }
+                Slider {
+                    id: zmaxInput
+                    value: heatMapCalc.zmax
+                    from: -100
+                    to: 0
+                    stepSize: 1
+                    orientation: Qt.Vertical
+                    Binding {
+                        target: heatMapCalc
+                        property: "zmax"
+                        value: zmaxInput.value
+                    }
+                }
             }
         }
     }

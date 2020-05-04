@@ -164,10 +164,6 @@ ApplicationWindow {
         nameFilters: ["whmap files (*.whmap)"]
     }
 
-    Labs.MessageDialog {
-        id: messageDialog
-    }
-
     Rectangle {
         id: body
         anchors.fill: parent
@@ -192,12 +188,7 @@ ApplicationWindow {
                     anchors.fill: parent
                     onClicked: {
                         if (Qt.platform.os == "linux") {
-                            if (linuxScan.running) {
-                                linuxScan.measure(Qt.point(mouse.x, mouse.y))
-                            } else {
-                                messageDialog.text = "Scan process is not running!"
-                                messageDialog.visible = true
-                            }
+                            linuxScan.measure(Qt.point(mouse.x, mouse.y))
                         }
                         if (Qt.platform.os == "android") {
                             androidScan.measure(Qt.point(mouse.x, mouse.y))

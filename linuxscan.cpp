@@ -23,8 +23,34 @@ LinuxScan::~LinuxScan() {
 }
 
 bool LinuxScan::measure(QPoint pos) {
-  if (mScanning || mScanner->state() != QProcess::Running)
+  if (mScanning || mScanner->state() != QProcess::Running) {
+
+    NetLink::Nl80211 nl80211;
+    NetLink::MessageLink msgLink(mInterfaceIndex);
+    nl80211.sendMessageWait(&msgLink);
+    auto link = msgLink.getLink();
+    if (link.link_found) {
+      emit scanStarted(pos);
+      NetLink::MessageStation msgStation(mInterfaceIndex, link);
+      int state = nl80211.sendMessageWait(&msgStation);
+      if (state == 0) {
+        auto station = msgStation.getStation();
+
+        ScanInfo scan = ScanInfo{QString::fromStdString(link.bssid),
+                                 QString::fromStdString(link.ssid),
+                                 0,
+                                 link.freq,
+                                 station.signal,
+                                 link.channel};
+
+        emit scanFinished(QList<ScanInfo>() << scan);
+      } else {
+        emit scanFailed(state);
+      }
+    }
+
     return false;
+  }
   mScanning = true;
   mTimer->start(10000);
   mScanNum++;

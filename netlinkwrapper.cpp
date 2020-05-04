@@ -126,6 +126,114 @@ static int nl3_callback_scan(struct nl_msg *msg, void *arg) {
   return m->callback_scan(scan);
 }
 
+/*
+ * @see iw/link.c: link_bss_handler
+ */
+static int nl3_callback_link_bss(struct nl_msg *msg, void *arg) {
+  struct link_result link;
+
+  struct genlmsghdr *gnlh =
+      static_cast<genlmsghdr *>(nlmsg_data(nlmsg_hdr(msg)));
+  struct nlattr *tb_msg[NL80211_ATTR_MAX + 1];
+  struct nlattr *bss[NL80211_BSS_MAX + 1];
+
+  static struct nla_policy bss_policy[NL80211_BSS_MAX + 1] = {};
+  bss_policy[NL80211_BSS_FREQUENCY].type = NLA_U32;
+  bss_policy[NL80211_BSS_BSSID] = {};
+  bss_policy[NL80211_BSS_INFORMATION_ELEMENTS] = {};
+  bss_policy[NL80211_BSS_STATUS].type = NLA_U32;
+
+  nla_parse(tb_msg, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
+            genlmsg_attrlen(gnlh, 0), NULL);
+  if (nla_parse_nested(bss, NL80211_BSS_MAX, tb_msg[NL80211_ATTR_BSS],
+                       bss_policy)) {
+    return NL_SKIP;
+  }
+
+  if (!bss[NL80211_BSS_BSSID]) {
+    return NL_SKIP;
+  }
+
+  if (!bss[NL80211_BSS_STATUS]) {
+    return NL_SKIP;
+  }
+
+  if (nla_get_u32(bss[NL80211_BSS_STATUS]) != NL80211_BSS_STATUS_ASSOCIATED)
+    return NL_SKIP;
+
+  link.link_found = true;
+  memcpy(link.mac_addr, nla_data(bss[NL80211_BSS_BSSID]), 6);
+
+  link.bssid =
+      mac_addr(static_cast<unsigned char *>(nla_data(bss[NL80211_BSS_BSSID])));
+  link.freq = nla_get_u32(bss[NL80211_BSS_FREQUENCY]);
+
+  if (bss[NL80211_BSS_INFORMATION_ELEMENTS]) {
+    uint8_t *ie =
+        static_cast<uint8_t *>(nla_data(bss[NL80211_BSS_INFORMATION_ELEMENTS]));
+    int ielen = nla_len(bss[NL80211_BSS_INFORMATION_ELEMENTS]);
+
+    while (ielen >= 2 && ielen >= ie[1]) {
+      uint8_t type = ie[0];
+      uint8_t len = ie[1];
+      uint8_t *data = ie + 2;
+
+      switch (type) {
+      case 0: /* SSID */
+        if (len > 0 && len <= 32)
+          link.ssid = std::string(reinterpret_cast<char *>(data), len);
+        break;
+      case 3: /* DS channel */
+        if (len == 1)
+          link.channel = *data;
+        break;
+      }
+
+      ielen -= len + 2;
+      ie += len + 2;
+    }
+  }
+
+  MessageLink *m = static_cast<MessageLink *>(arg);
+  return m->callback_link(link);
+
+  return NL_SKIP;
+}
+
+/*
+ * @see iw/link.c: print_link_sta
+ */
+static int nl3_callback_station(struct nl_msg *msg, void *arg) {
+  struct station_info station;
+
+  struct genlmsghdr *gnlh =
+      static_cast<genlmsghdr *>(nlmsg_data(nlmsg_hdr(msg)));
+  struct nlattr *tb_msg[NL80211_ATTR_MAX + 1];
+  struct nlattr *sinfo[NL80211_STA_INFO_MAX + 1];
+
+  static struct nla_policy stats_policy[NL80211_STA_INFO_MAX + 1] = {};
+  stats_policy[NL80211_STA_INFO_SIGNAL].type = NLA_U8;
+
+  nla_parse(tb_msg, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
+            genlmsg_attrlen(gnlh, 0), NULL);
+  if (!tb_msg[NL80211_ATTR_STA_INFO]) {
+    return NL_SKIP;
+  }
+
+  if (nla_parse_nested(sinfo, NL80211_STA_INFO_MAX,
+                       tb_msg[NL80211_ATTR_STA_INFO], stats_policy)) {
+    return NL_SKIP;
+  }
+
+  station.signal =
+      static_cast<int8_t>(nla_get_u8(sinfo[NL80211_STA_INFO_SIGNAL]));
+
+  MessageStation *m = static_cast<MessageStation *>(arg);
+  return m->callback_station(station);
+
+  return NL_SKIP;
+}
+
 static int error_handler(struct sockaddr_nl *nla, struct nlmsgerr *err,
                          void *arg) {
   int *ret = static_cast<int *>(arg);
@@ -265,7 +373,7 @@ void Socket::receiveMessage(const Callback *cb) {
   nl_recvmsgs(nl_sock, cb->getRawCb());
 }
 
-Nl80211::Nl80211() : state(1) {}
+Nl80211::Nl80211() : state(1) { socket.connect(); }
 Nl80211::~Nl80211() {}
 
 int Nl80211::wait() {
@@ -275,7 +383,6 @@ int Nl80211::wait() {
 }
 
 void Nl80211::sendMessage(Message *msg) {
-  socket.connect();
 
   int family_id = socket.resolve("nl80211");
 
@@ -294,9 +401,47 @@ void Nl80211::sendMessage(Message *msg) {
   cb.setup(NL_CB_VALID, msg->getCallback(), msg);
 }
 
-void Nl80211::sendMessageWait(Message *msg) {
+int Nl80211::sendMessageWait(Message *msg) {
   sendMessage(msg);
-  wait();
+  return wait();
+}
+
+MessageLink::MessageLink(signed long long devidx) {
+  callback = nl3_callback_link_bss;
+  m_devidx = devidx;
+  link.link_found = false;
+}
+
+int MessageLink::put(int family) const {
+  genlmsg_put(msg, 0, 0, family, 0, NLM_F_DUMP, NL80211_CMD_GET_SCAN, 0);
+  return nla_put_u32(msg, NL80211_ATTR_IFINDEX, m_devidx);
+}
+
+link_result MessageLink::getLink() { return link; }
+
+int MessageLink::callback_link(link_result link) {
+  this->link = link;
+  return NL_SKIP;
+}
+
+MessageStation::MessageStation(signed long long devidx, link_result link) {
+  callback = nl3_callback_station;
+  this->link = link;
+  station.signal = 0;
+  m_devidx = devidx;
+}
+
+int MessageStation::put(int family) const {
+  genlmsg_put(msg, 0, 0, family, 0, NLM_F_DUMP, NL80211_CMD_GET_STATION, 0);
+  nla_put_u32(msg, NL80211_ATTR_IFINDEX, m_devidx);
+  return nla_put(msg, NL80211_ATTR_MAC, 6, link.mac_addr);
+}
+
+station_info MessageStation::getStation() { return station; }
+
+int MessageStation::callback_station(station_info station) {
+  this->station = station;
+  return NL_SKIP;
 }
 
 } // namespace NetLink

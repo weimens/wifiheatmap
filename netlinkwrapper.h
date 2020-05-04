@@ -27,6 +27,19 @@ struct scan_info {
   int channel;
 };
 
+struct link_result {
+  bool link_found;
+  uint8_t mac_addr[8];
+  std::string bssid;
+  std::string ssid;
+  int freq;
+  int channel;
+};
+
+struct station_info {
+  float signal;
+};
+
 class Message {
   friend class Socket;
 
@@ -70,6 +83,33 @@ public:
 
 private:
   std::map<std::string, scan_info> scans;
+  signed long long m_devidx;
+};
+
+class MessageLink : public Message {
+public:
+  MessageLink(signed long long devidx);
+
+  int put(int family) const;
+  link_result getLink();
+  int callback_link(link_result link);
+
+private:
+  link_result link;
+  signed long long m_devidx;
+};
+
+class MessageStation : public Message {
+public:
+  MessageStation(signed long long devidx, link_result link);
+
+  int put(int family) const;
+  station_info getStation();
+  int callback_station(station_info station);
+
+private:
+  station_info station;
+  link_result link;
   signed long long m_devidx;
 };
 
@@ -121,7 +161,7 @@ public:
 
   int wait();
   void sendMessage(Message *msg);
-  void sendMessageWait(Message *msg);
+  int sendMessageWait(Message *msg);
 
 private:
   Socket socket;

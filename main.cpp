@@ -4,6 +4,7 @@
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QSortFilterProxyModel>
+#include <QUndoStack>
 
 #include "bssmodel.h"
 #include "document.h"
@@ -33,10 +34,12 @@ int main(int argc, char *argv[]) {
   QQmlApplicationEngine engine;
   QQmlContext *ctxt = engine.rootContext();
 
-  Document *document = new Document(&app);
+  auto undoStack = new QUndoStack(&app);
+
+  Document *document = new Document(undoStack, &app);
   document->newDocument();
 
-  MeasurementModel *posModel = new MeasurementModel(&app);
+  MeasurementModel *posModel = new MeasurementModel(undoStack, &app);
   QObject::connect(document, &Document::measurementsChanged, posModel,
                    &MeasurementModel::measurementsChanged);
   posModel->measurementsChanged(document->measurements());
@@ -96,6 +99,7 @@ int main(int argc, char *argv[]) {
   ctxt->setContextProperty("document", document);
   ctxt->setContextProperty("fixedFont", fixedFont);
   ctxt->setContextProperty("heatMapCalc", heatMapCalc);
+  ctxt->setContextProperty("undoStack", undoStack);
 
   QmlSortFilterProxyModel *proxyBssModel = new QmlSortFilterProxyModel(&app);
   proxyBssModel->setSourceModel(&bssModel);

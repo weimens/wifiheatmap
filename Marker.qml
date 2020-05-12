@@ -27,7 +27,8 @@ Item {
             id: markerarea
             anchors.fill: parent
             drag.target: marker
-            onDoubleClicked: posModel.remove(index)
+            onDoubleClicked: if (model.state)
+                                 posModel.remove(index)
             drag.onActiveChanged: {
                 if (!markerarea.drag.active) {
                     pos = Qt.point(marker.x, marker.y)

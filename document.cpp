@@ -12,7 +12,8 @@
 #include "androidhelper.h"
 #endif
 
-Document::Document(QObject *parent) : QObject(parent) {}
+Document::Document(QUndoStack *undoStack, QObject *parent)
+    : QObject(parent), mUndoStack(undoStack) {}
 
 void Document::newDocument() {
   setMeasurements();
@@ -29,18 +30,18 @@ bool Document::save(QUrl fileUrl) {
 
   QJsonObject root;
   QJsonArray data;
-  for (auto mi : mMeasurements->items()) {
+  for (auto position : mMeasurements->positions()) {
     QJsonObject point;
-    point["x"] = mi.pos.x();
-    point["y"] = mi.pos.y();
+    point["x"] = position.pos.x();
+    point["y"] = position.pos.y();
     QJsonArray scanInfo;
-    for (auto s : mi.scan) {
+    for (auto s : mMeasurements->measurementsAt(position)) {
       QJsonObject scanItem;
-      scanItem["bssid"] = s.second.bssid;
-      scanItem["ssid"] = s.second.ssid;
-      scanItem["signal"] = s.second.signal;
-      scanItem["freq"] = s.second.freq;
-      scanItem["channel"] = s.second.channel;
+      scanItem["bssid"] = s.bss.bssid;
+      scanItem["ssid"] = s.bss.ssid;
+      scanItem["signal"] = s.value;
+      scanItem["freq"] = s.bss.freq;
+      scanItem["channel"] = s.bss.channel;
       scanInfo.append(scanItem);
     }
     point["scanInfo"] = scanInfo;
@@ -104,8 +105,9 @@ void Document::read(QByteArray data) {
           point["y"].isDouble() && point.contains("scanInfo") &&
           point["scanInfo"].isArray()) {
 
+        QVector<QPair<Bss, double>> scans;
+
         QJsonArray scanInfo = point["scanInfo"].toArray();
-        std::map<QString, ScanInfo> scan;
         for (int j = 0; j < scanInfo.size(); ++j) {
           QJsonObject scanItem = scanInfo[j].toObject();
           if (scanItem.contains("bssid") && scanItem["bssid"].isString() &&
@@ -113,19 +115,17 @@ void Document::read(QByteArray data) {
               scanItem.contains("signal") && scanItem["signal"].isDouble() &&
               scanItem.contains("freq") && scanItem["freq"].isDouble() &&
               scanItem.contains("channel") && scanItem["channel"].isDouble()) {
-            ScanInfo item;
-            item.bssid = scanItem["bssid"].toString();
-            item.ssid = scanItem["ssid"].toString();
-            item.signal = scanItem["signal"].toDouble();
-            item.freq = scanItem["freq"].toInt();
-            item.channel = scanItem["channel"].toInt();
-            scan[item.bssid] = item;
+
+            Bss bss{scanItem["bssid"].toString(), scanItem["ssid"].toString(),
+                    scanItem["freq"].toInt(), scanItem["channel"].toInt()};
+            scans.push_back({bss, scanItem["signal"].toDouble()});
           }
         }
-        MeasurementItem mi;
-        mi.pos = QPoint(point["x"].toInt(), point["y"].toInt());
-        mi.scan = scan;
-        mMeasurements->appendItem(mi);
+
+        auto position =
+            Position{QPoint(point["x"].toInt(), point["y"].toInt())};
+        mMeasurements->addPosition(position);
+        mMeasurements->newMeasurementsAtPosition(position, scans);
       }
     }
   }
@@ -140,17 +140,20 @@ void Document::setMapImage(const QImage &mapImage) {
 
 void Document::setMeasurements() {
   mMeasurements.reset(new Measurements());
+  mUndoStack->clear();
 
+  // FIXME:
   if (mMeasurements) {
-    connect(mMeasurements.get(), &Measurements::postItemAppended, this,
+    connect(mMeasurements.get(), &Measurements::postMeasurementAppended, this,
             [=]() { setNeedsSaving(true); });
-    connect(mMeasurements.get(), &Measurements::postItemRemoved, this, [=]() {
-      if (mMeasurements->items().size() == 0)
-        setNeedsSaving(false);
-      else
-        setNeedsSaving(true);
-    });
-    connect(mMeasurements.get(), &Measurements::ItemChanged, this,
+    connect(mMeasurements.get(), &Measurements::postMeasurementRemoved, this,
+            [=]() {
+              if (mMeasurements->positions().size() == 0)
+                setNeedsSaving(false);
+              else
+                setNeedsSaving(true);
+            });
+    connect(mMeasurements.get(), &Measurements::positionChanged, this,
             [=]() { setNeedsSaving(true); });
   }
 

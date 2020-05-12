@@ -1,35 +1,33 @@
 #include "measurements.h"
 #include <cmath>
+#include <set>
 
 Measurements::Measurements(QObject *parent)
-    : QObject(parent), mCurrentBss({}), mKownBssid({}) {}
+    : QObject(parent), mMeasurements({}), mPositions({}), mBss({}),
+      mCurrentBss({}) {}
 
-bool Measurements::setItemAt(int index, const MeasurementItem &item) {
-  if (index < 0 || index >= mItems.size())
-    return false;
-
-  const MeasurementItem &oldItem = mItems.at(index);
-  if (item.pos == oldItem.pos && item.scan.size() == oldItem.scan.size())
-    return false; // FIXME: item.scan == oldItem.scan
-
-  mItems[index] = item;
-
-  emit ItemChanged();
-  emit heatMapChanged();
-  updateBss(item.scan);
-
-  return true;
+const QVector<Measurement> Measurements::measurements() const {
+  return mMeasurements;
 }
 
+const QVector<Position> Measurements::positions() const { return mPositions; }
+
+const QVector<Bss> Measurements::bsss() const { return mBss; }
+
 qreal Measurements::maxZAt(int index) const {
-  if (index < 0 || index >= mItems.size())
+  if (index < 0 || index >= mPositions.size())
     return NAN;
 
-  const MeasurementItem item = mItems.at(index);
-  float max_z = -INFINITY;
-  for (QString bss : mCurrentBss) {
-    if (item.scan.find(bss) != item.scan.end())
-      max_z = std::max(max_z, item.scan.at(bss).signal);
+  auto pos = mPositions.at(index);
+  double max_z = -INFINITY;
+  for (auto bss : mCurrentBss) {
+    auto iter =
+        std::find_if(mMeasurements.begin(), mMeasurements.end(),
+                     [pos, bss](Measurement measurement) -> bool {
+                       return measurement.pos == pos && measurement.bss == bss;
+                     });
+    if (iter != mMeasurements.end())
+      max_z = std::max(max_z, iter->value);
   }
   if (std::isinf(max_z)) {
     return NAN;
@@ -37,50 +35,136 @@ qreal Measurements::maxZAt(int index) const {
   return max_z;
 }
 
-QPoint Measurements::posAt(int index) const {
-  if (index < 0 || index >= mItems.size())
-    return QPoint();
-  return mItems.at(index).pos;
+int Measurements::countAt(int index) const {
+  auto position = mPositions.at(index);
+  return std::count_if(mMeasurements.begin(), mMeasurements.end(),
+                       [position](Measurement measurement) -> bool {
+                         return measurement.pos == position;
+                       });
 }
 
-void Measurements::appendItem(MeasurementItem item) {
-  emit preItemAppended();
+QVector<Measurement> Measurements::measurementsAt(Position position) const {
+  QVector<Measurement> ret;
+  auto pos_iter = std::find(mPositions.begin(), mPositions.end(), position);
 
-  mItems.append(item);
-
-  emit postItemAppended();
-  updateBss(item.scan);
+  if (pos_iter != mPositions.end()) {
+    for (auto measurement : mMeasurements) {
+      if (measurement.pos == *pos_iter) {
+        ret.push_back(measurement);
+      }
+    }
+  }
+  return ret;
 }
 
-void Measurements::removeAt(int index) {
-  if (index < 0 || index >= mItems.size())
-    return;
-  emit preItemRemoved(index);
+void Measurements::newMeasurementsAtPosition(
+    Position position, const QVector<QPair<Bss, double>> &values) {
+  auto pos_iter = std::find(mPositions.begin(), mPositions.end(), position);
 
-  mItems.removeAt(index);
+  if (pos_iter != mPositions.end()) {
 
-  emit postItemRemoved();
-  emit heatMapChanged();
+    emit preMeasurementAppended(mMeasurements.size(), values.size());
+    for (auto value : values) {
+      auto bss_iter = std::find(mBss.begin(), mBss.end(), value.first);
+      if (bss_iter == mBss.end()) {
+        emit preBssAppended(mBss.size());
+        mBss.push_back(value.first);
+        emit postBssAppended();
+        bss_iter = &(mBss.last());
+      }
+
+      mMeasurements.push_back(
+          Measurement{*(pos_iter), *(bss_iter), value.second});
+    }
+    emit postMeasurementAppended();
+
+    emit positionChanged(std::distance(mPositions.begin(), pos_iter));
+    emit heatMapChanged();
+  }
 }
 
-QVector<MeasurementItem> Measurements::items() const { return mItems; }
+void Measurements::addPosition(Position position) {
+  auto pos_iter = std::find_if(
+      mPositions.begin(), mPositions.end(),
+      [position](Position pos) -> bool { return pos == position; });
 
-void Measurements::bssChanged(QList<QString> bss) {
+  if (pos_iter == mPositions.end()) {
+    emit prePositionAppended(mPositions.size());
+    mPositions.push_back(position);
+    emit postPositionAppended();
+  }
+}
+
+QVector<Measurement> Measurements::removePosition(Position position) {
+  QVector<Measurement> measurementsRemoved;
+
+  auto pos_iter = std::find_if(
+      mPositions.begin(), mPositions.end(),
+      [position](Position pos) -> bool { return pos == position; });
+  if (pos_iter == mPositions.end()) {
+    return measurementsRemoved;
+  }
+
+  auto iter = mMeasurements.begin();
+  while (iter != mMeasurements.end()) {
+    if (iter->pos == *(pos_iter)) {
+      int i = std::distance(mMeasurements.begin(), iter);
+      emit preMeasurementRemoved(i);
+      measurementsRemoved.append(*iter);
+      mMeasurements.removeAt(i);
+      emit postMeasurementRemoved();
+    } else {
+      ++iter;
+    }
+  }
+
+  auto bss_iter = mBss.begin();
+  while (bss_iter != mBss.end()) {
+    auto bss_count = std::count_if(mMeasurements.begin(), mMeasurements.end(),
+                                   [bss_iter](Measurement measurement) -> bool {
+                                     return measurement.bss == *bss_iter;
+                                   });
+    if (bss_count <= 0) {
+      auto bss_index = std::distance(mBss.begin(), bss_iter);
+      emit preBssRemoved(bss_index);
+      mBss.removeAt(bss_index);
+      emit postBssRemoved();
+    } else {
+      ++bss_iter;
+    }
+  }
+
+  auto pos_index = std::distance(mPositions.begin(), pos_iter);
+  emit prePositionRemoved(pos_index);
+  mPositions.removeAt(pos_index);
+  emit postPositionRemoved();
+
+  if (measurementsRemoved.size() > 0)
+    emit heatMapChanged();
+
+  return measurementsRemoved;
+}
+
+void Measurements::updatePosition(Position oldPosition, Position newPosition) {
+  auto pos_iter = std::find(mPositions.begin(), mPositions.end(), oldPosition);
+  if (pos_iter != mPositions.end()) {
+    for (auto iter = mMeasurements.begin(); iter != mMeasurements.end();
+         ++iter) {
+      if (iter->pos == *pos_iter) {
+        iter->pos.pos = newPosition.pos;
+      }
+    }
+
+    pos_iter->pos = newPosition.pos;
+    emit positionChanged(std::distance(mPositions.begin(), pos_iter));
+    emit heatMapChanged();
+  }
+}
+
+void Measurements::selectedBssChanged(QVector<Bss> selectedBss) {
   mCurrentBss = {};
-  for (auto a : bss) {
+  for (auto a : selectedBss) {
     mCurrentBss.push_back(a);
   }
   emit heatMapChanged();
-}
-
-void Measurements::updateBss(std::map<QString, ScanInfo> scan) {
-  for (std::pair<QString, ScanInfo> s : scan) {
-    ScanInfo scan_info = s.second;
-    if (std::find(mKownBssid.begin(), mKownBssid.end(), scan_info.bssid) ==
-        mKownBssid.end()) {
-      mKownBssid.push_back(scan_info.bssid);
-      emit bssAdded(scan_info.bssid, scan_info.ssid, scan_info.freq,
-                    scan_info.channel);
-    }
-  }
 }

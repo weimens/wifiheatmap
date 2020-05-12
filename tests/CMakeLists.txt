@@ -1,7 +1,7 @@
 project(wifiheatmap-tests LANGUAGES CXX)
 
 enable_testing()
-find_package(Qt5 COMPONENTS Gui Test REQUIRED)
+find_package(Qt5 COMPONENTS Gui Widgets Test REQUIRED)
 
 
 
@@ -56,6 +56,8 @@ add_executable(tst_measurementmodel
     ../measurements.cpp
     ../measurementmodel.h
     ../measurementmodel.cpp
+    ../commands.h
+    ../commands.cpp
 )
 add_test(tst_measurementmodel tst_measurementmodel)
 target_include_directories(tst_measurementmodel PRIVATE ..)
@@ -69,6 +71,7 @@ set_target_properties(tst_measurementmodel
 target_link_libraries(tst_measurementmodel
     Qt5::Test
     Qt5::Core
+    Qt5::Widgets
 )
 
 
@@ -94,6 +97,7 @@ target_link_libraries(tst_document
     Qt5::Core
     Qt5::Gui
     QuaZip5::QuaZip5
+    Qt5::Widgets
 )
 
 
@@ -125,4 +129,5 @@ target_link_libraries(tst_heatmap
     Qt5::Quick
     QuaZip5::QuaZip5
     CGAL::CGAL
+    Qt5::Widgets
 )

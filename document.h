@@ -3,6 +3,7 @@
 #include "measurements.h"
 #include <QImage>
 #include <QObject>
+#include <QUndoStack>
 #include <QUrl>
 #include <memory>
 
@@ -14,7 +15,7 @@ class Document : public QObject {
   Q_PROPERTY(bool needsSaving READ needsSaving NOTIFY needsSavingChanged)
 
 public:
-  Document(QObject *parent = nullptr);
+  Document(QUndoStack *undoStack, QObject *parent = nullptr);
   Q_INVOKABLE void newDocument();
 
   Q_INVOKABLE bool save(QUrl fileUrl);
@@ -37,6 +38,7 @@ private:
   void setNeedsSaving(bool value);
 
   std::unique_ptr<Measurements> mMeasurements{nullptr};
+  QUndoStack *mUndoStack;
   QImage mMapImage;
   bool mNeedsSaving{false};
   void read(QByteArray data);

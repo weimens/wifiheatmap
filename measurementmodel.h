@@ -2,8 +2,10 @@
 
 #include <QAbstractListModel>
 #include <QPoint>
+#include <QUndoStack>
 
 #include "measurements.h"
+#include "scaninfo.h"
 
 class MeasurementModel : public QAbstractListModel {
   Q_OBJECT
@@ -16,7 +18,7 @@ public:
     stateRole,
   };
 
-  explicit MeasurementModel(QObject *parent = nullptr);
+  MeasurementModel(QUndoStack *undoStack, QObject *parent = nullptr);
 
   QHash<int, QByteArray> roleNames() const override;
 
@@ -29,8 +31,6 @@ public:
                 int role = Qt::DisplayRole) const override;
 
   Q_INVOKABLE void remove(int row);
-
-  QList<MeasurementItem> getMeasurementItems();
 
   void measurementsChanged(Measurements *measurements);
 
@@ -46,4 +46,5 @@ public slots:
 private:
   QPersistentModelIndex mScanIndex;
   Measurements *mMeasurements;
+  QUndoStack *mUndoStack;
 };

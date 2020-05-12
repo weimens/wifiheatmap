@@ -23,8 +23,10 @@ LinuxScan::~LinuxScan() {
 }
 
 bool LinuxScan::measure(QPoint pos) {
-  if (mScanning || mScanner->state() != QProcess::Running) {
-
+  if (mScanning) {
+    return false;
+  }
+  if (mScanner->state() != QProcess::Running) {
     NetLink::Nl80211 nl80211;
     NetLink::MessageLink msgLink(mInterfaceIndex);
     nl80211.sendMessageWait(&msgLink);
@@ -49,7 +51,7 @@ bool LinuxScan::measure(QPoint pos) {
       }
     }
 
-    return false;
+    return true;
   }
   mScanning = true;
   mTimer->start(10000);

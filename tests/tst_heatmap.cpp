@@ -17,7 +17,8 @@ private slots:
   }
 
   void heatMapCalc() {
-    Document document;
+    QUndoStack undostack;
+    Document document(&undostack);
     document.newDocument();
 
     HeatMapProvider heatmap = HeatMapProvider();
@@ -27,37 +28,34 @@ private slots:
     QSignalSpy heatMapReady(heatMapCalc, &HeatMapCalc::heatMapReady);
 
     // add entries
-    document.measurements()->appendItem(
-        {QPoint(42, 42),
-         {
-             {"36:2c:94:64:26:28",
-              ScanInfo{"36:2c:94:64:26:28", "chips", 0, 2437, -83.0, 6}},
-             {"08:96:d7:9d:cd:c2",
-              ScanInfo{"08:96:d7:9d:cd:c2", "chookies", 0, 2457, -58.0, 10}},
-         }});
-    document.measurements()->appendItem(
-        {QPoint(420, 210),
-         {
-             {"36:2c:94:64:26:28",
-              ScanInfo{"36:2c:94:64:26:28", "chips", 0, 2437, -83.0, 6}},
-             {"08:96:d7:9d:cd:c2",
-              ScanInfo{"08:96:d7:9d:cd:c2", "chookies", 0, 2457, -58.0, 10}},
-         }});
-    document.measurements()->appendItem(
-        {QPoint(300, 300),
-         {
-             {"36:2c:94:64:26:28",
-              ScanInfo{"36:2c:94:64:26:28", "chips", 0, 2437, -83.0, 6}},
-             {"08:96:d7:9d:cd:c2",
-              ScanInfo{"08:96:d7:9d:cd:c2", "chookies", 0, 2457, -58.0, 10}},
-         }});
+    document.measurements()->addPosition(Position{QPoint(42, 42)});
+    document.measurements()->newMeasurementsAtPosition(
+        Position{QPoint(42, 42)},
+        {
+            {Bss{"36:2c:94:64:26:28", "chips", 2437, 6}, -83.0},
+            {Bss{"08:96:d7:9d:cd:c2", "chookies", 2457, 10}, -58.0},
+        });
+    document.measurements()->addPosition(Position{QPoint(420, 210)});
+    document.measurements()->newMeasurementsAtPosition(
+        Position{QPoint(420, 210)},
+        {
+            {Bss{"36:2c:94:64:26:28", "chips", 2437, 6}, -83.0},
+            {Bss{"08:96:d7:9d:cd:c2", "chookies", 2457, 10}, -58.0},
+        });
+    document.measurements()->addPosition(Position{QPoint(420, 210)});
+    document.measurements()->newMeasurementsAtPosition(
+        Position{QPoint(300, 300)},
+        {
+            {Bss{"36:2c:94:64:26:28", "chips", 2437, 6}, -83.0},
+            {Bss{"08:96:d7:9d:cd:c2", "chookies", 2457, 10}, -58.0},
+        });
 
-    QTRY_COMPARE_WITH_TIMEOUT(heatMapReady.count(), 0, 200);
+    QTRY_COMPARE_WITH_TIMEOUT(heatMapReady.count(), 2, 200);
 
-    document.measurements()->bssChanged(QList<QString>()
-                                        << "36:2c:94:64:26:28");
+    document.measurements()->selectedBssChanged(
+        QVector<Bss>() << Bss{"36:2c:94:64:26:28", "chips", 2437, 6});
 
-    QTRY_COMPARE_WITH_TIMEOUT(heatMapReady.count(), 1, 200);
+    QTRY_COMPARE_WITH_TIMEOUT(heatMapReady.count(), 3, 200);
 
     auto size = QSize();
     auto image = heatmap.requestImage("heatmap", &size, QSize());

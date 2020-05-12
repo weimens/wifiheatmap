@@ -140,10 +140,10 @@ void HeatMapCalc::generateHeatMap() {
     ny = maxsize;
   }
 
-  for (int i = 0; i < mDocument->measurements()->items().size(); ++i) {
+  for (int i = 0; i < mDocument->measurements()->positions().size(); ++i) {
     qreal z = mDocument->measurements()->maxZAt(i);
     if (!std::isnan(z)) {
-      QPoint pos = mDocument->measurements()->posAt(i);
+      QPoint pos = mDocument->measurements()->positions().at(i).pos;
       value_function.insert({Point(pos.x(), pos.y()), z});
     }
   }

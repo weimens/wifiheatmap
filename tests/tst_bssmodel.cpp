@@ -17,27 +17,25 @@ private slots:
 
     // add two entries
     // ==============
-    m.appendItem(
-        {QPoint(42, 42),
-         {
-             {"36:2c:94:64:26:28",
-              ScanInfo{"36:2c:94:64:26:28", "chips", 0, 2437, -83.0, 6}},
-             {"08:96:d7:9d:cd:c2",
-              ScanInfo{"08:96:d7:9d:cd:c2", "chookies", 0, 2457, -58.0, 10}},
-         }});
+    m.addPosition(Position{QPoint(42, 42)});
+    m.newMeasurementsAtPosition(
+        Position{QPoint(42, 42)},
+        {
+            {Bss{"36:2c:94:64:26:28", "chips", 2437, 6}, -83.0},
+            {Bss{"08:96:d7:9d:cd:c2", "chookies", 2457, 10}, -58.0},
+        });
     // ==============
     QCOMPARE(bssModel.rowCount(), 2);
 
     // add two other entries with same bss
     // ==============
-    m.appendItem(
-        {QPoint(3, 3),
-         {
-             {"36:2c:94:64:26:28",
-              ScanInfo{"36:2c:94:64:26:28", "chips", 0, 2437, -58.0, 6}},
-             {"08:96:d7:9d:cd:c2",
-              ScanInfo{"08:96:d7:9d:cd:c2", "chookies", 0, 2457, -83.0, 10}},
-         }});
+    m.addPosition(Position{QPoint(3, 3)});
+    m.newMeasurementsAtPosition(
+        Position{QPoint(3, 3)},
+        {
+            {Bss{"36:2c:94:64:26:28", "chips", 2437, 6}, -58.0},
+            {Bss{"08:96:d7:9d:cd:c2", "chookies", 2457, 10}, -83.0},
+        });
     // ==============
     QCOMPARE(bssModel.rowCount(), 2);
   }
@@ -50,22 +48,27 @@ private slots:
 
     // init with some entries.
     // ==============
-    m.appendItem(
-        {QPoint(42, 42),
-         {
-             {"36:2c:94:64:26:28",
-              ScanInfo{"36:2c:94:64:26:28", "chips", 0, 2437, -83.0, 6}},
-             {"08:96:d7:9d:cd:c2",
-              ScanInfo{"08:96:d7:9d:cd:c2", "chookies", 0, 2457, -58.0, 10}},
-         }});
+    m.addPosition(Position{QPoint(42, 42)});
+    m.newMeasurementsAtPosition(
+        Position{QPoint(42, 42)},
+        {
+            {Bss{"36:2c:94:64:26:28", "chips", 2437, 6}, -83.0},
+            {Bss{"08:96:d7:9d:cd:c2", "chookies", 2457, 10}, -58.0},
+        });
     // ==============
     QTRY_COMPARE_WITH_TIMEOUT(selectedBssChanged.count(), 0, 200);
 
     // select first entry
     // ==============
-    bssModel.setData(bssModel.index(0, 0), true, Qt::CheckStateRole);
+    bssModel.setData(bssModel.index(0, 4), true, Qt::CheckStateRole);
     // ==============
     QTRY_COMPARE_WITH_TIMEOUT(selectedBssChanged.count(), 1, 200);
+
+    // unsselect first entry
+    // ==============
+    bssModel.setData(bssModel.index(0, 4), false, Qt::CheckStateRole);
+    // ==============
+    QTRY_COMPARE_WITH_TIMEOUT(selectedBssChanged.count(), 2, 200);
   }
 };
 

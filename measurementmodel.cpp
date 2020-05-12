@@ -1,8 +1,9 @@
 #include "measurementmodel.h"
+#include "commands.h"
 
-MeasurementModel::MeasurementModel(QObject *parent)
+MeasurementModel::MeasurementModel(QUndoStack *undoStack, QObject *parent)
     : QAbstractListModel(parent), mScanIndex(QPersistentModelIndex()),
-      mMeasurements(nullptr) {}
+      mMeasurements(nullptr), mUndoStack(undoStack) {}
 
 QHash<int, QByteArray> MeasurementModel::roleNames() const {
   return {
@@ -16,7 +17,7 @@ int MeasurementModel::rowCount(const QModelIndex &parent) const {
   if (parent.isValid() || !mMeasurements)
     return 0;
 
-  return mMeasurements->items().size();
+  return mMeasurements->positions().size();
 }
 
 bool MeasurementModel::setData(const QModelIndex &index, const QVariant &value,
@@ -24,13 +25,12 @@ bool MeasurementModel::setData(const QModelIndex &index, const QVariant &value,
   if (!index.isValid() || !mMeasurements || !value.isValid())
     return false;
 
-  MeasurementItem item = mMeasurements->items().at(index.row());
-  if (role == posRole)
-    item.pos = value.value<QPoint>();
-  else
-    return false;
+  auto pos = mMeasurements->positions().at(index.row());
+  if (role == posRole) {
+    auto pos_new = Position{value.value<QPoint>()};
 
-  if (mMeasurements->setItemAt(index.row(), item)) {
+    auto command = new UpdatePosition{mMeasurements, pos, pos_new};
+    mUndoStack->push(command);
     emit dataChanged(index, index, {role});
     return true;
   }
@@ -49,14 +49,14 @@ QVariant MeasurementModel::data(const QModelIndex &index, int role) const {
   if (!index.isValid() || !mMeasurements)
     return {};
 
-  const MeasurementItem item = mMeasurements->items().at(index.row());
+  auto position = mMeasurements->positions().at(index.row());
   switch (role) {
   case posRole:
-    return item.pos;
+    return position.pos;
   case zRole:
     return mMeasurements->maxZAt(index.row());
   case stateRole:
-    return item.scan.size() > 0;
+    return mMeasurements->countAt(index.row()) > 0;
   }
 
   return {};
@@ -65,30 +65,39 @@ QVariant MeasurementModel::data(const QModelIndex &index, int role) const {
 void MeasurementModel::remove(int row) {
   if (!mMeasurements)
     return;
-  mMeasurements->removeAt(row);
+
+  auto pos = mMeasurements->positions().at(row);
+  auto command = new RemovePosition{mMeasurements, pos};
+  mUndoStack->push(command);
 }
 
 void MeasurementModel::scanFinished(QList<ScanInfo> results) {
   if (!mScanIndex.isValid() || !mMeasurements)
     return;
 
-  MeasurementItem item = mMeasurements->items().at(mScanIndex.row());
+  QVector<QPair<Bss, double>> values;
   for (auto s : results) {
-    item.scan[s.bssid] = s;
+    auto bss = Bss{s.bssid, s.ssid, s.freq, s.channel};
+    values.push_back(QPair<Bss, double>{bss, s.signal});
   }
-  if (mMeasurements->setItemAt(mScanIndex.row(), item)) {
-    emit dataChanged(mScanIndex, mScanIndex, {zRole, stateRole});
-  }
+
+  auto position = mMeasurements->positions().at(mScanIndex.row());
+  auto command = new AddMeasurementsAtPosition{mMeasurements, position, values};
+  mUndoStack->push(command);
+
+  emit dataChanged(mScanIndex, mScanIndex, {zRole, stateRole});
+  mScanIndex = QPersistentModelIndex();
 }
 
 void MeasurementModel::scanFailed(int err) {
   // TODO: display message
-  if (mScanIndex.isValid())
-    remove(mScanIndex.row());
+  auto position = mMeasurements->positions().at(mScanIndex.row());
+  mMeasurements->removePosition(position);
+  mScanIndex = QPersistentModelIndex();
 }
 
 void MeasurementModel::scanStarted(QPoint pos) {
-  mMeasurements->appendItem({pos, {}});
+  mMeasurements->addPosition(Position{pos});
   mScanIndex = QPersistentModelIndex(index(rowCount() - 1));
 }
 
@@ -103,16 +112,18 @@ void MeasurementModel::measurementsChanged(Measurements *measurements) {
   mMeasurements = measurements;
 
   if (mMeasurements) {
-    connect(mMeasurements, &Measurements::preItemAppended, this, [=]() {
-      const int index = mMeasurements->items().size();
-      beginInsertRows(QModelIndex(), index, index);
-    });
-    connect(mMeasurements, &Measurements::postItemAppended, this,
+    connect(mMeasurements, &Measurements::prePositionAppended, this,
+            [=](int index, int count) {
+              beginInsertRows(QModelIndex(), index, index + count - 1);
+            });
+    connect(mMeasurements, &Measurements::postPositionAppended, this,
             [=]() { endInsertRows(); });
 
-    connect(mMeasurements, &Measurements::preItemRemoved, this,
-            [=](int index) { beginRemoveRows(QModelIndex(), index, index); });
-    connect(mMeasurements, &Measurements::postItemRemoved, this,
+    connect(mMeasurements, &Measurements::prePositionRemoved, this,
+            [=](int index, int count) {
+              beginRemoveRows(QModelIndex(), index, index + count - 1);
+            });
+    connect(mMeasurements, &Measurements::postPositionRemoved, this,
             [=]() { endRemoveRows(); });
 
     connect(mMeasurements, &Measurements::heatMapChanged, this, [=]() {
@@ -120,6 +131,11 @@ void MeasurementModel::measurementsChanged(Measurements *measurements) {
         QModelIndex idx = index(i, 0);
         emit dataChanged(idx, idx, {zRole});
       }
+    });
+
+    connect(mMeasurements, &Measurements::positionChanged, this, [=](int row) {
+      QModelIndex idx = index(row, 0);
+      emit dataChanged(idx, idx, {zRole, stateRole, posRole});
     });
   }
 

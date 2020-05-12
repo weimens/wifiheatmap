@@ -10,7 +10,8 @@ class DocumentTest : public QObject {
 private slots:
 
   void changeMapImage() {
-    Document document;
+    QUndoStack undostack;
+    Document document(&undostack);
     document.newDocument();
 
     QSignalSpy mapImageChanged(&document, &Document::mapImageChanged);
@@ -21,7 +22,8 @@ private slots:
   }
 
   void newDocument() {
-    Document document;
+    QUndoStack undostack;
+    Document document(&undostack);
     QSignalSpy mapImageChanged(&document, &Document::mapImageChanged);
     QSignalSpy measurementsChanged(&document, &Document::measurementsChanged);
 
@@ -32,21 +34,21 @@ private slots:
   }
 
   void needsSaving() {
-    Document document;
+    QUndoStack undostack;
+    Document document(&undostack);
     document.newDocument();
     QSignalSpy needsSavingChanged(&document, &Document::needsSavingChanged);
 
     QCOMPARE(document.property("needsSaving").toBool(), false);
 
     // add entries
-    document.measurements()->appendItem(
-        {QPoint(42, 42),
-         {
-             {"36:2c:94:64:26:28",
-              ScanInfo{"36:2c:94:64:26:28", "chips", 0, 2437, -83.0, 6}},
-             {"08:96:d7:9d:cd:c2",
-              ScanInfo{"08:96:d7:9d:cd:c2", "chookies", 0, 2457, -58.0, 10}},
-         }});
+    document.measurements()->addPosition(Position{QPoint(42, 42)});
+    document.measurements()->newMeasurementsAtPosition(
+        Position{QPoint(42, 42)},
+        {
+            {Bss{"36:2c:94:64:26:28", "chips", 2437, 6}, -83.0},
+            {Bss{"08:96:d7:9d:cd:c2", "chookies", 2457, 10}, -58.0},
+        });
 
     QCOMPARE(document.property("needsSaving").toBool(), true);
     QTRY_COMPARE_WITH_TIMEOUT(needsSavingChanged.count(), 1, 200);

@@ -80,6 +80,22 @@ ApplicationWindow {
                 onTriggered: window.close()
             }
         }
+        Menu {
+            title: "Edit"
+            Action {
+                text: "undo"
+                enabled: undoStack.canUndo
+                onTriggered: undoStack.undo()
+                shortcut: StandardKey.Undo
+            }
+
+            Action {
+                text: "redo"
+                enabled: undoStack.canRedo
+                onTriggered: undoStack.redo()
+                shortcut: StandardKey.Redo
+            }
+        }
     }
 
     Labs.FileDialog {

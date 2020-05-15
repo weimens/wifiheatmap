@@ -50,6 +50,9 @@ public:
   double zmax();
   double zmin();
 
+public slots:
+  void selectedTypeChanged(MeasurementType selectedType);
+
 signals:
   void zfromChanged(double zfrom);
   void ztoChanged(double zto);

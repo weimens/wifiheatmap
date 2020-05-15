@@ -6,7 +6,7 @@
 #include <QProcess>
 #include <QTimer>
 
-#include "scaninfo.h"
+#include "entries.h"
 
 class LinuxScan : public QObject {
   Q_OBJECT
@@ -21,7 +21,7 @@ public:
   Q_INVOKABLE void start_scanner();
 
   Q_INVOKABLE bool measure(QPoint pos);
-  QList<ScanInfo> results();
+  QVector<MeasurementEntry> results();
 public slots:
   void onData();
 
@@ -34,7 +34,7 @@ public slots:
 signals:
   void runningChanged();
   void scanStarted(QPoint pos);
-  void scanFinished(QList<ScanInfo> results);
+  void scanFinished(QVector<MeasurementEntry> results);
   void scanFailed(int err);
 
 private:

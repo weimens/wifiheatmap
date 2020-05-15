@@ -39,10 +39,14 @@ bool Document::save(QUrl fileUrl) {
       QJsonObject scanItem;
       scanItem["bssid"] = s.bss.bssid;
       scanItem["ssid"] = s.bss.ssid;
-      scanItem["signal"] = s.value;
       scanItem["freq"] = s.bss.freq;
       scanItem["channel"] = s.bss.channel;
-      scanInfo.append(scanItem);
+      switch (s.measurementType) {
+      case WiFiSignal:
+        scanItem["signal"] = s.value;
+        scanInfo.append(scanItem);
+        break;
+      }
     }
     point["scanInfo"] = scanInfo;
     data.append(point);
@@ -108,7 +112,7 @@ void Document::read(QByteArray data) {
           point["y"].isDouble() && point.contains("scanInfo") &&
           point["scanInfo"].isArray()) {
 
-        QVector<QPair<Bss, double>> scans;
+        QVector<MeasurementEntry> scans;
 
         QJsonArray scanInfo = point["scanInfo"].toArray();
         for (int j = 0; j < scanInfo.size(); ++j) {
@@ -121,7 +125,7 @@ void Document::read(QByteArray data) {
 
             Bss bss{scanItem["bssid"].toString(), scanItem["ssid"].toString(),
                     scanItem["freq"].toInt(), scanItem["channel"].toInt()};
-            scans.push_back({bss, scanItem["signal"].toDouble()});
+            scans.push_back({bss, WiFiSignal, scanItem["signal"].toDouble()});
           }
         }
 

@@ -14,6 +14,10 @@ const QVector<Position> Measurements::positions() const { return mPositions; }
 
 const QVector<Bss> Measurements::bsss() const { return mBss; }
 
+const QVector<MeasurementType> Measurements::measurementTypes() const {
+  return mMeasurementTypes;
+}
+
 qreal Measurements::maxZAt(int index) const {
   if (index < 0 || index >= mPositions.size())
     return NAN;
@@ -21,13 +25,15 @@ qreal Measurements::maxZAt(int index) const {
   auto pos = mPositions.at(index);
   double max_z = -INFINITY;
   for (auto bss : mCurrentBss) {
-    auto iter =
-        std::find_if(mMeasurements.begin(), mMeasurements.end(),
-                     [pos, bss](Measurement measurement) -> bool {
-                       return measurement.pos == pos && measurement.bss == bss;
-                     });
+    auto iter = std::find_if(mMeasurements.begin(), mMeasurements.end(),
+                             [pos, bss, this](Measurement measurement) -> bool {
+                               return measurement.pos == pos &&
+                                      measurement.bss == bss &&
+                                      measurement.measurementType ==
+                                          this->mCurrentMeasurementType;
+                             });
     if (iter != mMeasurements.end())
-      max_z = std::max(max_z, iter->value);
+      max_z = std::max(max_z, static_cast<double>(iter->value));
   }
   if (std::isinf(max_z)) {
     return NAN;
@@ -58,23 +64,33 @@ QVector<Measurement> Measurements::measurementsAt(Position position) const {
 }
 
 void Measurements::newMeasurementsAtPosition(
-    Position position, const QVector<QPair<Bss, double>> &values) {
+    Position position, const QVector<MeasurementEntry> &values) {
   auto pos_iter = std::find(mPositions.begin(), mPositions.end(), position);
 
   if (pos_iter != mPositions.end()) {
 
     emit preMeasurementAppended(mMeasurements.size(), values.size());
     for (auto value : values) {
-      auto bss_iter = std::find(mBss.begin(), mBss.end(), value.first);
+      auto bss_iter = std::find(mBss.begin(), mBss.end(), value.bss);
       if (bss_iter == mBss.end()) {
         emit preBssAppended(mBss.size());
-        mBss.push_back(value.first);
+        mBss.push_back(value.bss);
         emit postBssAppended();
         bss_iter = &(mBss.last());
       }
 
+      auto type_iter =
+          std::find(mMeasurementTypes.begin(), mMeasurementTypes.end(),
+                    value.measurementType);
+      if (type_iter == mMeasurementTypes.end()) {
+        emit preTypeAppended(mMeasurementTypes.size());
+        mMeasurementTypes.push_back(value.measurementType);
+        emit postTypeAppended();
+        type_iter = &(mMeasurementTypes.last());
+      }
+
       mMeasurements.push_back(
-          Measurement{*(pos_iter), *(bss_iter), value.second});
+          Measurement{*(pos_iter), *(bss_iter), *(type_iter), value.value});
     }
     emit postMeasurementAppended();
 
@@ -134,6 +150,23 @@ QVector<Measurement> Measurements::removePosition(Position position) {
     }
   }
 
+  auto type_iter = mMeasurementTypes.begin();
+  while (type_iter != mMeasurementTypes.end()) {
+    auto type_count =
+        std::count_if(mMeasurements.begin(), mMeasurements.end(),
+                      [type_iter](Measurement measurement) -> bool {
+                        return measurement.measurementType == *type_iter;
+                      });
+    if (type_count <= 0) {
+      auto type_index = std::distance(mMeasurementTypes.begin(), type_iter);
+      emit preTypeRemoved(type_index);
+      mMeasurementTypes.removeAt(type_index);
+      emit postTypeRemoved();
+    } else {
+      ++type_iter;
+    }
+  }
+
   auto pos_index = std::distance(mPositions.begin(), pos_iter);
   emit prePositionRemoved(pos_index);
   mPositions.removeAt(pos_index);
@@ -166,5 +199,12 @@ void Measurements::selectedBssChanged(QVector<Bss> selectedBss) {
   for (auto a : selectedBss) {
     mCurrentBss.push_back(a);
   }
+  emit heatMapChanged();
+}
+
+void Measurements::selectedTypeChanged(MeasurementType selectedType) {
+  if (mCurrentMeasurementType == selectedType)
+    return;
+  mCurrentMeasurementType = selectedType;
   emit heatMapChanged();
 }

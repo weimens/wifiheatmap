@@ -3,7 +3,7 @@
 #include <QObject>
 #include <QPoint>
 
-#include "scaninfo.h"
+#include "entries.h"
 
 class AndroidScan : public QObject {
   Q_OBJECT
@@ -12,11 +12,11 @@ public:
 
   Q_INVOKABLE bool measure(QPoint pos);
 
-  QList<ScanInfo> results();
+  QVector<MeasurementEntry> results();
   Q_INVOKABLE void onData();
 signals:
   void scanStarted(QPoint pos);
-  void scanFinished(QList<ScanInfo> results);
+  void scanFinished(QVector<MeasurementEntry> results);
   void scanFailed(int err);
 
 private:

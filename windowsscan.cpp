@@ -18,18 +18,16 @@ WindowsScan::~WindowsScan() {
   workerThread.wait();
 }
 
-QList<ScanInfo> WindowsScan::results() {
-  auto scanInfos = QList<ScanInfo>{};
+QVector<MeasurementEntry> WindowsScan::results() {
+  auto scanInfos = QVector<MeasurementEntry>{};
 
   WLANAPI::Handle handle;
   WLANAPI::BssList bssList(handle, mInterfaceIndex);
   for (auto scanInfo : bssList.getScan()) {
-    auto scan = ScanInfo{QString::fromStdString(scanInfo.bssid),
-                         QString::fromStdString(scanInfo.ssid),
-                         static_cast<int>(scanInfo.last_seen),
-                         scanInfo.freq / 1000,
-                         static_cast<float>(scanInfo.signal),
-                         0};
+    auto scan = MeasurementEntry{
+        Bss{QString::fromStdString(scanInfo.bssid),
+            QString::fromStdString(scanInfo.ssid), scanInfo.freq / 1000, 0},
+        WiFiSignal, static_cast<float>(scanInfo.signal)};
     scanInfos.push_back(scan);
   }
 

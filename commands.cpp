@@ -2,7 +2,7 @@
 
 AddMeasurementsAtPosition::AddMeasurementsAtPosition(
     Measurements *measurements, Position position,
-    QVector<QPair<Bss, double>> values)
+    QVector<MeasurementEntry> values)
     : mMeasurements(measurements), mPosition(position), mValues(values) {}
 
 void AddMeasurementsAtPosition::redo() {
@@ -22,9 +22,10 @@ void RemovePosition::redo() {
 }
 
 void RemovePosition::undo() {
-  QVector<QPair<Bss, double>> values;
+  QVector<MeasurementEntry> values;
   for (auto measurement : mMeasurement) {
-    values.append(QPair<Bss, double>{measurement.bss, measurement.value});
+    values.append(MeasurementEntry{measurement.bss, measurement.measurementType,
+                                   measurement.value});
   }
   mMeasurements->addPosition(mPosition);
   mMeasurements->newMeasurementsAtPosition(mPosition, values);

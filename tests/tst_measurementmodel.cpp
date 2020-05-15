@@ -32,8 +32,8 @@ private slots:
 
     // scanFinished
     // ==============
-    posModel.scanFinished(QList<ScanInfo>() << ScanInfo{
-                              "36:2c:94:64:26:28", "chips", 0, 2437, -83.0, 6});
+    posModel.scanFinished(
+        {{Bss{"36:2c:94:64:26:28", "chips", 2437, 6}, WiFiSignal, -83.0}});
     // ==============
     QCOMPARE(posModel.rowCount(), 1);
     QCOMPARE(posModel.data(posModel.index(posModel.rowCount() - 1),
@@ -83,10 +83,9 @@ private slots:
     QSignalSpy dataChanged(&posModel, &MeasurementModel::dataChanged);
 
     posModel.scanStarted(QPoint(42, 42));
-    posModel.scanFinished({
-        ScanInfo{"36:2c:94:64:26:28", "chips", 0, 2437, -83.0, 6},
-        ScanInfo{"08:96:d7:9d:cd:c2", "chookies", 0, 2457, -58.0, 10},
-    });
+    posModel.scanFinished(
+        {{Bss{"36:2c:94:64:26:28", "chips", 2437, 6}, WiFiSignal, -83.0},
+         {Bss{"08:96:d7:9d:cd:c2", "chookies", 2457, 10}, WiFiSignal, -58.0}});
     QTRY_COMPARE_WITH_TIMEOUT(heatMapChanged.count(), 1, 200);
     QTRY_COMPARE_WITH_TIMEOUT(positionChanged.count(), 1, 200);
     QTRY_COMPARE_WITH_TIMEOUT(dataChanged.count(), 3, 200);
@@ -113,16 +112,14 @@ private slots:
     // ==============
     posModel.scanStarted(QPoint(42, 42));
     QTRY_COMPARE_WITH_TIMEOUT(dataChanged.count(), 0, 200);
-    posModel.scanFinished({
-        ScanInfo{"36:2c:94:64:26:28", "chips", 0, 2437, -83.0, 6},
-        ScanInfo{"08:96:d7:9d:cd:c2", "chookies", 0, 2457, -58.0, 10},
-    });
+    posModel.scanFinished(
+        {{Bss{"36:2c:94:64:26:28", "chips", 2437, 6}, WiFiSignal, -83.0},
+         {Bss{"08:96:d7:9d:cd:c2", "chookies", 2457, 10}, WiFiSignal, -58.0}});
     QTRY_COMPARE_WITH_TIMEOUT(dataChanged.count(), 3, 200);
     posModel.scanStarted(QPoint(3, 3));
-    posModel.scanFinished({
-        ScanInfo{"36:2c:94:64:26:28", "chips", 0, 2437, -58.0, 6},
-        ScanInfo{"08:96:d7:9d:cd:c2", "chookies", 0, 2457, -83.0, 10},
-    });
+    posModel.scanFinished(
+        {{Bss{"36:2c:94:64:26:28", "chips", 2437, 6}, WiFiSignal, -83.0},
+         {Bss{"08:96:d7:9d:cd:c2", "chookies", 2457, 10}, WiFiSignal, -58.0}});
     // ==============
     QTRY_COMPARE_WITH_TIMEOUT(dataChanged.count(), 7, 200);
 

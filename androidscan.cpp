@@ -33,8 +33,8 @@ void AndroidScan::registerNativeMethods() {
   env->DeleteLocalRef(objectClass);
 }
 
-QList<ScanInfo> AndroidScan::results() {
-  auto scanInfos = QList<ScanInfo>{};
+QVector<MeasurementEntry> AndroidScan::results() {
+  auto scanInfos = QVector<MeasurementEntry>{};
 
   if (!checkPermission("ACCESS_FINE_LOCATION")) {
     return scanInfos;
@@ -54,13 +54,12 @@ QList<ScanInfo> AndroidScan::results() {
       for (int i = 0; i < size; ++i) {
         auto scanResult =
             wifiList.callObjectMethod("get", "(I)Ljava/lang/Object;", i);
-        auto scanInfo =
-            ScanInfo{scanResult.getObjectField<jstring>("BSSID").toString(),
-                     scanResult.getObjectField<jstring>("SSID").toString(),
-                     0, // scanResult.getField<jint>("timestamp"),
-                     scanResult.getField<jint>("frequency"),
-                     static_cast<float>(scanResult.getField<jint>("level")),
-                     0};
+        auto scanInfo = MeasurementEntry{
+            Bss{scanResult.getObjectField<jstring>("BSSID").toString(),
+                scanResult.getObjectField<jstring>("SSID").toString(),
+                scanResult.getField<jint>("frequency"), 0},
+            WiFiSignal,
+            static_cast<double>(scanResult.getField<jint>("level"))};
         scanInfos.append(scanInfo);
       }
     }

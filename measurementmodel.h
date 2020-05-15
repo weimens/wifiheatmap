@@ -4,8 +4,8 @@
 #include <QPoint>
 #include <QUndoStack>
 
+#include "entries.h"
 #include "measurements.h"
-#include "scaninfo.h"
 
 class MeasurementModel : public QAbstractListModel {
   Q_OBJECT
@@ -39,7 +39,7 @@ public:
   Measurements *measurements() const;
 
 public slots:
-  void scanFinished(QList<ScanInfo> results);
+  void scanFinished(QVector<MeasurementEntry> results);
   void scanFailed(int err);
   void scanStarted(QPoint pos);
 

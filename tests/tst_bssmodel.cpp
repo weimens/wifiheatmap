@@ -21,8 +21,8 @@ private slots:
     m.newMeasurementsAtPosition(
         Position{QPoint(42, 42)},
         {
-            {Bss{"36:2c:94:64:26:28", "chips", 2437, 6}, -83.0},
-            {Bss{"08:96:d7:9d:cd:c2", "chookies", 2457, 10}, -58.0},
+            {Bss{"36:2c:94:64:26:28", "chips", 2437, 6}, WiFiSignal, -83.0},
+            {Bss{"08:96:d7:9d:cd:c2", "chookies", 2457, 10}, WiFiSignal, -58.0},
         });
     // ==============
     QCOMPARE(bssModel.rowCount(), 2);
@@ -33,8 +33,8 @@ private slots:
     m.newMeasurementsAtPosition(
         Position{QPoint(3, 3)},
         {
-            {Bss{"36:2c:94:64:26:28", "chips", 2437, 6}, -58.0},
-            {Bss{"08:96:d7:9d:cd:c2", "chookies", 2457, 10}, -83.0},
+            {Bss{"36:2c:94:64:26:28", "chips", 2437, 6}, WiFiSignal, -58.0},
+            {Bss{"08:96:d7:9d:cd:c2", "chookies", 2457, 10}, WiFiSignal, -83.0},
         });
     // ==============
     QCOMPARE(bssModel.rowCount(), 2);
@@ -52,8 +52,8 @@ private slots:
     m.newMeasurementsAtPosition(
         Position{QPoint(42, 42)},
         {
-            {Bss{"36:2c:94:64:26:28", "chips", 2437, 6}, -83.0},
-            {Bss{"08:96:d7:9d:cd:c2", "chookies", 2457, 10}, -58.0},
+            {Bss{"36:2c:94:64:26:28", "chips", 2437, 6}, WiFiSignal, -83.0},
+            {Bss{"08:96:d7:9d:cd:c2", "chookies", 2457, 10}, WiFiSignal, -58.0},
         });
     // ==============
     QTRY_COMPARE_WITH_TIMEOUT(selectedBssChanged.count(), 0, 200);

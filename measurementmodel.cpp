@@ -71,18 +71,13 @@ void MeasurementModel::remove(int row) {
   mUndoStack->push(command);
 }
 
-void MeasurementModel::scanFinished(QList<ScanInfo> results) {
+void MeasurementModel::scanFinished(QVector<MeasurementEntry> results) {
   if (!mScanIndex.isValid() || !mMeasurements)
     return;
 
-  QVector<QPair<Bss, double>> values;
-  for (auto s : results) {
-    auto bss = Bss{s.bssid, s.ssid, s.freq, s.channel};
-    values.push_back(QPair<Bss, double>{bss, s.signal});
-  }
-
   auto position = mMeasurements->positions().at(mScanIndex.row());
-  auto command = new AddMeasurementsAtPosition{mMeasurements, position, values};
+  auto command =
+      new AddMeasurementsAtPosition{mMeasurements, position, results};
   mUndoStack->push(command);
 
   emit dataChanged(mScanIndex, mScanIndex, {zRole, stateRole});

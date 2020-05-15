@@ -7,7 +7,7 @@
 class AddMeasurementsAtPosition : public QUndoCommand {
 public:
   AddMeasurementsAtPosition(Measurements *measurements, Position position,
-                            QVector<QPair<Bss, double>> values);
+                            QVector<MeasurementEntry> values);
 
   void redo();
   void undo();
@@ -15,7 +15,7 @@ public:
 private:
   Measurements *mMeasurements;
   Position mPosition;
-  QVector<QPair<Bss, double>> mValues;
+  QVector<MeasurementEntry> mValues;
 };
 
 class RemovePosition : public QUndoCommand {

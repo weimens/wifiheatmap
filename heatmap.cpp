@@ -119,6 +119,53 @@ double HeatMapLegend::zmax() { return mZmax; }
 
 double HeatMapLegend::zmin() { return mZmin; }
 
+void HeatMapLegend::selectedTypeChanged(MeasurementType selectedType) {
+  double from = 0;
+  double to = 1;
+  unsigned int stepSize = 1;
+
+  double min = 0;
+  double max = 1;
+
+  switch (selectedType) {
+  case WiFiSignal:
+    from = -100;
+    to = 0;
+    stepSize = 1;
+    mZunit = "dbm";
+    min = -80;
+    max = -54;
+    mFlip = -1;
+    break;
+  }
+
+  if (mStepSize != stepSize) {
+    mStepSize = stepSize;
+    emit zstepSizeChanged(mStepSize);
+  }
+
+  if (mFrom > from) {
+    mFrom = from;
+    emit zfromChanged(mFrom);
+  }
+  if (mTo < to) {
+    mTo = to;
+    emit ztoChanged(mTo);
+  }
+
+  setZmin(min);
+  setZmax(max);
+
+  if (mFrom < from) {
+    mFrom = from;
+    emit zfromChanged(mFrom);
+  }
+  if (mTo > to) {
+    mTo = to;
+    emit ztoChanged(mTo);
+  }
+}
+
 QString HeatMapLegend::zFormatter(double value) {
   return QString::number(value / mStepSize) + "\u2009" + mZunit;
 }

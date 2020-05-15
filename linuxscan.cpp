@@ -38,14 +38,11 @@ bool LinuxScan::measure(QPoint pos) {
       if (state == 0) {
         auto station = msgStation.getStation();
 
-        ScanInfo scan = ScanInfo{QString::fromStdString(link.bssid),
-                                 QString::fromStdString(link.ssid),
-                                 0,
-                                 link.freq,
-                                 station.signal,
-                                 link.channel};
+        auto bss =
+            Bss{QString::fromStdString(link.bssid),
+                QString::fromStdString(link.ssid), link.freq, link.channel};
 
-        emit scanFinished(QList<ScanInfo>() << scan);
+        emit scanFinished({MeasurementEntry{bss, WiFiSignal, station.signal}});
       } else {
         emit scanFailed(state);
       }
@@ -80,22 +77,19 @@ void LinuxScan::start_scanner() {
   }
 }
 
-QList<ScanInfo> LinuxScan::results() {
+QVector<MeasurementEntry> LinuxScan::results() {
   NetLink::Nl80211 nl80211;
   NetLink::MessageScan msg(mInterfaceIndex);
   nl80211.sendMessageWait(&msg);
   const std::map<std::string, NetLink::scan_info> &scans = msg.getScan();
-  auto scanInfos = QList<ScanInfo>{};
+  auto ret = QVector<MeasurementEntry>{};
   for (auto s : scans) {
-    auto scan = ScanInfo{QString::fromStdString(s.second.bssid),
-                         QString::fromStdString(s.second.ssid),
-                         s.second.last_seen,
-                         s.second.freq,
-                         s.second.signal,
-                         s.second.channel};
-    scanInfos.push_back(scan);
+    ret.push_back(MeasurementEntry{Bss{QString::fromStdString(s.second.bssid),
+                                       QString::fromStdString(s.second.ssid),
+                                       s.second.freq, s.second.channel},
+                                   WiFiSignal, s.second.signal});
   }
-  return scanInfos;
+  return ret;
 }
 
 void LinuxScan::onData() {

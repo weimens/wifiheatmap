@@ -268,63 +268,38 @@ ApplicationWindow {
         onClicked: sidebar.open()
     }
 
-    Button {
-        id: legend
-        width: 350
-        height: 30
+    Flow {
+        id: flow
+        width: window.width - 2 * flow.spacing
+        spacing: 5
+        layoutDirection: Qt.RightToLeft
+
         anchors.rightMargin: 5
         anchors.bottomMargin: 5
         anchors.bottom: parent.bottom
         anchors.right: parent.right
-        onClicked: popup.opened ? popup.close() : popup.open()
 
-        Image {
-            anchors.fill: parent
-            sourceSize.width: parent.width
-            sourceSize.height: parent.height
-            source: "image://heatmap/legend/0"
-            opacity: 0.5
-        }
+        ComboBox {
+            id: typeComboBox
+            width: 180
+            height: 30
 
-        Text {
-            text: heatMapLegend.zFormatter(heatMapLegend.zmin)
-            anchors.left: parent.left
-            anchors.verticalCenter: parent.verticalCenter
-        }
-        Text {
-            text: heatMapLegend.zFormatter(
-                      (heatMapLegend.zmin + heatMapLegend.zmax) / 2)
-            anchors.centerIn: parent
-        }
-        Text {
-            text: heatMapLegend.zFormatter(heatMapLegend.zmax)
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-        }
+            model: typeModel
+            textRole: "display"
 
-        Popup {
-            id: popup
-            padding: 0
-            y: -popup.height
-            width: legend.width
-            closePolicy: Popup.CloseOnPressOutsideParent
-
-            enter: Transition {
-                NumberAnimation {
-                    property: "height"
-                    duration: 0
-                    from: legend.height
-                    to: zminInput.height
-                }
+            currentIndex: typeModel.currentIndex
+            Binding {
+                target: typeModel
+                property: "currentIndex"
+                value: typeComboBox.currentIndex
             }
-            exit: Transition {
-                NumberAnimation {
-                    property: "height"
-                    duration: 0
-                    from: zminInput.height
-                    to: legend.height
-                }
-            }
+        }
+
+        Button {
+            id: legend
+            width: 350
+            height: 30
+            onClicked: popup.opened ? popup.close() : popup.open()
 
             Image {
                 anchors.fill: parent
@@ -334,36 +309,85 @@ ApplicationWindow {
                 opacity: 0.5
             }
 
-            Row {
+            Text {
+                text: heatMapLegend.zFormatter(heatMapLegend.zmin)
                 anchors.left: parent.left
-                Slider {
-                    id: zminInput
-                    value: heatMapLegend.zmin
-                    from: heatMapLegend.zfrom
-                    to: heatMapLegend.zto
-                    stepSize: heatMapLegend.zstepSize
-                    orientation: Qt.Vertical
-                    Binding {
-                        target: heatMapLegend
-                        property: "zmin"
-                        value: zminInput.value
-                    }
-                }
+                anchors.verticalCenter: parent.verticalCenter
+            }
+            Text {
+                text: heatMapLegend.zFormatter(
+                          (heatMapLegend.zmin + heatMapLegend.zmax) / 2)
+                anchors.centerIn: parent
+            }
+            Text {
+                text: heatMapLegend.zFormatter(heatMapLegend.zmax)
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
             }
 
-            Row {
-                anchors.right: parent.right
-                Slider {
-                    id: zmaxInput
-                    value: heatMapLegend.zmax
-                    from: heatMapLegend.zfrom
-                    to: heatMapLegend.zto
-                    stepSize: heatMapLegend.zstepSize
-                    orientation: Qt.Vertical
-                    Binding {
-                        target: heatMapLegend
-                        property: "zmax"
-                        value: zmaxInput.value
+            Popup {
+                id: popup
+                padding: 0
+                y: -popup.height
+                width: legend.width
+                closePolicy: Popup.CloseOnPressOutsideParent
+
+                enter: Transition {
+                    NumberAnimation {
+                        property: "height"
+                        duration: 0
+                        from: legend.height
+                        to: zminInput.height
+                    }
+                }
+                exit: Transition {
+                    NumberAnimation {
+                        property: "height"
+                        duration: 0
+                        from: zminInput.height
+                        to: legend.height
+                    }
+                }
+
+                Image {
+                    anchors.fill: parent
+                    sourceSize.width: parent.width
+                    sourceSize.height: parent.height
+                    source: "image://heatmap/legend/0"
+                    opacity: 0.5
+                }
+
+                Row {
+                    anchors.left: parent.left
+                    Slider {
+                        id: zminInput
+                        value: heatMapLegend.zmin
+                        from: heatMapLegend.zfrom
+                        to: heatMapLegend.zto
+                        stepSize: heatMapLegend.zstepSize
+                        orientation: Qt.Vertical
+                        Binding {
+                            target: heatMapLegend
+                            property: "zmin"
+                            value: zminInput.value
+                        }
+                    }
+                }
+
+                Row {
+                    anchors.right: parent.right
+                    Slider {
+                        id: zmaxInput
+                        value: heatMapLegend.zmax
+                        from: heatMapLegend.zfrom
+                        to: heatMapLegend.zto
+                        stepSize: heatMapLegend.zstepSize
+                        orientation: Qt.Vertical
+                        Binding {
+                            target: heatMapLegend
+                            property: "zmax"
+                            value: zmaxInput.value
+                        }
                     }
                 }
             }

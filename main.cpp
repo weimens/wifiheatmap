@@ -12,6 +12,7 @@
 #include "heatmap.h"
 #include "imageprovider.h"
 #include "measurementmodel.h"
+#include "measurementtypemodel.h"
 #include "qmlsortfilterproxymodel.h"
 
 #ifdef Q_OS_ANDROID
@@ -45,7 +46,14 @@ int main(int argc, char *argv[]) {
                    &MeasurementModel::measurementsChanged);
   posModel->measurementsChanged(document->measurements());
 
+  MeasurementTypeModel *typeModel = new MeasurementTypeModel(&app);
+  QObject::connect(document, &Document::measurementsChanged, typeModel,
+                   &MeasurementTypeModel::measurementsChanged);
+  typeModel->measurementsChanged(document->measurements());
+
   HeatMapLegend *heatMapLegend = new HeatMapLegend(&app);
+  QObject::connect(typeModel, &MeasurementTypeModel::selectedTypeChanged,
+                   heatMapLegend, &HeatMapLegend::selectedTypeChanged);
 
   HeatMapProvider *heatmap = new HeatMapProvider();
   engine.addImageProvider(QLatin1String("heatmap"), heatmap);
@@ -105,6 +113,7 @@ int main(int argc, char *argv[]) {
   ctxt->setContextProperty("heatMapCalc", heatMapCalc);
   ctxt->setContextProperty("undoStack", undoStack);
   ctxt->setContextProperty("heatMapLegend", heatMapLegend);
+  ctxt->setContextProperty("typeModel", typeModel);
 
   QmlSortFilterProxyModel *proxyBssModel = new QmlSortFilterProxyModel(&app);
   proxyBssModel->setSourceModel(&bssModel);

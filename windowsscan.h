@@ -3,7 +3,7 @@
 #include <QObject>
 #include <QThread>
 
-#include "scaninfo.h"
+#include "entries.h"
 
 class WindowsScan : public QObject {
   Q_OBJECT
@@ -13,7 +13,7 @@ public:
 
   Q_INVOKABLE bool measure(QPoint pos);
 
-  QList<ScanInfo> results();
+  QVector<MeasurementEntry> results();
   void onData(unsigned long waitResult);
 
 public slots:
@@ -21,7 +21,7 @@ public slots:
 
 signals:
   void scanStarted(QPoint pos);
-  void scanFinished(QList<ScanInfo> results);
+  void scanFinished(QVector<MeasurementEntry> results);
   void scanFailed(int err);
   void triggerScan(int interfaceIndex);
 

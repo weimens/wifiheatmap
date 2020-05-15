@@ -1,6 +1,7 @@
 #include <QApplication>
 #include <QFileInfo>
 #include <QFontDatabase>
+#include <QIcon>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QSortFilterProxyModel>

@@ -5,11 +5,11 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
-#include <quazip5/quazip.h>
-#include <quazip5/quazipfile.h>
-
 #ifdef Q_OS_ANDROID
 #include "androidhelper.h"
+#else
+#include <quazip5/quazip.h>
+#include <quazip5/quazipfile.h>
 #endif
 
 Document::Document(QUndoStack *undoStack, QObject *parent)
@@ -22,7 +22,7 @@ void Document::newDocument() {
 }
 
 bool Document::save(QUrl fileUrl) {
-
+#ifndef Q_OS_ANDROID
   QuaZip zip(fileUrl.toLocalFile());
   if (!zip.open(QuaZip::Mode::mdCreate)) {
     return false;
@@ -64,10 +64,13 @@ bool Document::save(QUrl fileUrl) {
   zip.close();
 
   setNeedsSaving(false);
+#endif
+
   return true;
 }
 
 void Document::load(QUrl fileUrl) {
+#ifndef Q_OS_ANDROID
   QuaZip zip(fileUrl.toLocalFile());
   if (!zip.open(QuaZip::Mode::mdUnzip)) {
     return;
@@ -87,7 +90,7 @@ void Document::load(QUrl fileUrl) {
     file.close();
   }
   zip.close();
-
+#endif
   setNeedsSaving(false);
 }
 

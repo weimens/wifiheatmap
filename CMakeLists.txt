@@ -5,9 +5,6 @@ project(wifiheatmap LANGUAGES CXX)
 find_package(CGAL)
 if(ANDROID)
     set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
-    set(QUAZIP_LIB_VERSION_SUFFIX 5)
-    find_package(QuaZip5 REQUIRED CONFIG)
-    set(ANDROID_EXTRA_LIBS ${QUAZIP_LIBRARIES})
 else()
     set(QUAZIP_LIB_VERSION_SUFFIX 5) #WORKAROUND: QuaZip5Find only works if Qt5 is already found.
     find_package(QuaZip5 REQUIRED)
@@ -131,10 +128,11 @@ target_link_libraries(${PROJECT_NAME}
     Qt5::Quick
     Qt5::Widgets
     CGAL::CGAL
-    QuaZip5::QuaZip5
 )
 if(ANDROID)
     target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::AndroidExtras)
+else()
+    target_link_libraries(${PROJECT_NAME} PRIVATE QuaZip5::QuaZip5)
 endif()
 if(UNIX AND NOT ANDROID)
     target_link_libraries(${PROJECT_NAME} PRIVATE nl3::genl)

@@ -93,9 +93,47 @@ void HeatMapProvider::setHeatMapImage(const QImage &heatMapImage) {
   mHeatMapImage = heatMapImage;
 }
 
+HeatMapLegend::HeatMapLegend(QObject *parent) : QObject(parent) {}
+
+double HeatMapLegend::zfrom() { return mFrom; }
+
+double HeatMapLegend::zto() { return mTo; }
+
+double HeatMapLegend::zstepSize() { return mStepSize; }
+
+void HeatMapLegend::setZmax(double max) {
+  if (mZmax == max)
+    return;
+  mZmax = max;
+  emit zmaxChanged(max);
+}
+
+void HeatMapLegend::setZmin(double min) {
+  if (mZmin == min)
+    return;
+  mZmin = min;
+  emit zminChanged(min);
+}
+
+double HeatMapLegend::zmax() { return mZmax; }
+
+double HeatMapLegend::zmin() { return mZmin; }
+
+QString HeatMapLegend::zFormatter(double value) {
+  return QString::number(value / mStepSize) + "\u2009" + mZunit;
+}
+
+double HeatMapLegend::flip() { return mFlip; }
+
 HeatMapCalc::HeatMapCalc(HeatMapProvider *heatMapProvider, Document *document,
-                         QObject *parent)
-    : QObject(parent), mHeatMapProvider(heatMapProvider), mDocument(document) {
+                         HeatMapLegend *heatMapLegend, QObject *parent)
+    : QObject(parent), mHeatMapProvider(heatMapProvider), mDocument(document),
+      mHeatMapLegend(heatMapLegend) {
+  connect(mHeatMapLegend, &HeatMapLegend::zmaxChanged, this,
+          [this]() { generateImage(); });
+  connect(mHeatMapLegend, &HeatMapLegend::zminChanged, this,
+          [this]() { generateImage(); });
+
   connect(document, &Document::mapImageChanged, this,
           &HeatMapCalc::generateHeatMap);
   connect(document, &Document::measurementsChanged, this,
@@ -179,26 +217,6 @@ void HeatMapCalc::generateHeatMap() {
   generateImage();
 }
 
-void HeatMapCalc::setZmax(double max) {
-  if (mZmax == max)
-    return;
-  mZmax = max;
-  emit zmaxChanged(max);
-  generateImage();
-}
-
-void HeatMapCalc::setZmin(double min) {
-  if (mZmin == min)
-    return;
-  mZmin = min;
-  emit zminChanged(min);
-  generateImage();
-}
-
-double HeatMapCalc::zmax() { return mZmax; }
-
-double HeatMapCalc::zmin() { return mZmin; }
-
 void HeatMapCalc::generateImage() {
   int nx = heatmapZ.size();
   if (nx <= 0)
@@ -218,11 +236,21 @@ void HeatMapCalc::generateImage() {
     for (int j = 0; j < ny; ++j) {
       double z = heatmapZ[i][j];
       if (!isnan(z)) {
-        if (z < mZmin)
-          z = mZmin;
-        if (z > mZmax)
-          z = mZmax;
-        z = 1 - floor((z - mZmin) / (mZmin - mZmax) * (colorCount - 1));
+        if (mHeatMapLegend->flip() < 0) {
+          if (z < mHeatMapLegend->zmin())
+            z = mHeatMapLegend->zmin();
+          if (z > mHeatMapLegend->zmax())
+            z = mHeatMapLegend->zmax();
+        } else {
+          if (z < mHeatMapLegend->zmax())
+            z = mHeatMapLegend->zmax();
+          if (z > mHeatMapLegend->zmin())
+            z = mHeatMapLegend->zmin();
+        }
+        z = 1 - mHeatMapLegend->flip() *
+                    floor((z - mHeatMapLegend->zmin()) /
+                          abs(mHeatMapLegend->zmin() - mHeatMapLegend->zmax()) *
+                          (colorCount - 1));
         image.setPixel(i, j, std::max(z, 0.));
       } else {
         image.setPixel(i, j, 0);

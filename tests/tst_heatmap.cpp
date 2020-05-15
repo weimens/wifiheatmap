@@ -21,9 +21,10 @@ private slots:
     Document document(&undostack);
     document.newDocument();
 
+    HeatMapLegend heatMapLegend;
     HeatMapProvider heatmap = HeatMapProvider();
     HeatMapCalc *heatMapCalc =
-        new HeatMapCalc(&heatmap, &document, &document); // FIXME no pointer
+        new HeatMapCalc(&heatmap, &document, &heatMapLegend, &document);
 
     QSignalSpy heatMapReady(heatMapCalc, &HeatMapCalc::heatMapReady);
 

@@ -276,7 +276,7 @@ ApplicationWindow {
         anchors.bottomMargin: 5
         anchors.bottom: parent.bottom
         anchors.right: parent.right
-        onClicked: popup.open()
+        onClicked: popup.opened ? popup.close() : popup.open()
 
         Image {
             anchors.fill: parent
@@ -287,31 +287,27 @@ ApplicationWindow {
         }
 
         Text {
-            text: heatMapCalc.zmin + "\u2009dbm"
+            text: heatMapLegend.zFormatter(heatMapLegend.zmin)
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
         }
         Text {
-            text: (heatMapCalc.zmin + heatMapCalc.zmax) / 2 + "\u2009dbm"
+            text: heatMapLegend.zFormatter(
+                      (heatMapLegend.zmin + heatMapLegend.zmax) / 2)
             anchors.centerIn: parent
         }
         Text {
-            text: heatMapCalc.zmax + "\u2009dbm"
+            text: heatMapLegend.zFormatter(heatMapLegend.zmax)
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
         }
 
         Popup {
-
             id: popup
             padding: 0
-
-            parent: Overlay.overlay
-
-            x: parent.width - legend.anchors.rightMargin - width
-            y: parent.height - legend.anchors.bottomMargin - height
+            y: -popup.height
             width: legend.width
-            height: legend.height
+            closePolicy: Popup.CloseOnPressOutsideParent
 
             enter: Transition {
                 NumberAnimation {
@@ -342,44 +338,30 @@ ApplicationWindow {
                 anchors.left: parent.left
                 Slider {
                     id: zminInput
-                    value: heatMapCalc.zmin
-                    from: -100
-                    to: 0
-                    stepSize: 1
+                    value: heatMapLegend.zmin
+                    from: heatMapLegend.zfrom
+                    to: heatMapLegend.zto
+                    stepSize: heatMapLegend.zstepSize
                     orientation: Qt.Vertical
                     Binding {
-                        target: heatMapCalc
+                        target: heatMapLegend
                         property: "zmin"
                         value: zminInput.value
                     }
                 }
-                Text {
-                    text: heatMapCalc.zmin + "\u2009dbm"
-                    anchors.top: parent.top
-                }
-            }
-            Text {
-                id: zmidText
-                text: (heatMapCalc.zmin + heatMapCalc.zmax) / 2 + "\u2009dbm"
-                anchors.horizontalCenter: parent.horizontalCenter
             }
 
             Row {
                 anchors.right: parent.right
-
-                Text {
-                    text: heatMapCalc.zmax + "\u2009dbm"
-                    anchors.top: parent.top
-                }
                 Slider {
                     id: zmaxInput
-                    value: heatMapCalc.zmax
-                    from: -100
-                    to: 0
-                    stepSize: 1
+                    value: heatMapLegend.zmax
+                    from: heatMapLegend.zfrom
+                    to: heatMapLegend.zto
+                    stepSize: heatMapLegend.zstepSize
                     orientation: Qt.Vertical
                     Binding {
-                        target: heatMapCalc
+                        target: heatMapLegend
                         property: "zmax"
                         value: zmaxInput.value
                     }

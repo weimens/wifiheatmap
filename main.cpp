@@ -45,11 +45,14 @@ int main(int argc, char *argv[]) {
                    &MeasurementModel::measurementsChanged);
   posModel->measurementsChanged(document->measurements());
 
+  HeatMapLegend *heatMapLegend = new HeatMapLegend(&app);
+
   HeatMapProvider *heatmap = new HeatMapProvider();
   engine.addImageProvider(QLatin1String("heatmap"), heatmap);
   ImageProvider *imageProvider = new ImageProvider(document);
   engine.addImageProvider(QLatin1String("document"), imageProvider);
-  HeatMapCalc *heatMapCalc = new HeatMapCalc(heatmap, document, document);
+  HeatMapCalc *heatMapCalc =
+      new HeatMapCalc(heatmap, document, heatMapLegend, document);
 
   BssModel bssModel;
   QObject::connect(document, &Document::measurementsChanged, &bssModel,
@@ -101,6 +104,7 @@ int main(int argc, char *argv[]) {
   ctxt->setContextProperty("fixedFont", fixedFont);
   ctxt->setContextProperty("heatMapCalc", heatMapCalc);
   ctxt->setContextProperty("undoStack", undoStack);
+  ctxt->setContextProperty("heatMapLegend", heatMapLegend);
 
   QmlSortFilterProxyModel *proxyBssModel = new QmlSortFilterProxyModel(&app);
   proxyBssModel->setSourceModel(&bssModel);

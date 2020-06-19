@@ -16,7 +16,7 @@ public:
   Q_INVOKABLE void onData();
 signals:
   void scanFinished(QVector<MeasurementEntry> results);
-  void scanFailed(int err);
+  void scanFailed(int err, QString message);
 
 private:
   void registerNativeMethods();

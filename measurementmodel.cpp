@@ -85,7 +85,8 @@ void MeasurementModel::scanFinished(QVector<MeasurementEntry> results) {
 }
 
 void MeasurementModel::scanFailed(int err) {
-  // TODO: display message
+  if (!mScanIndex.isValid())
+    return;
   auto position = mMeasurements->positions().at(mScanIndex.row());
   mMeasurements->removePosition(position);
   mScanIndex = QPersistentModelIndex();

@@ -55,6 +55,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     commands.cpp
     measurementtypemodel.cpp
     measurementcontroller.cpp
+    statusqueue.cpp
 
     measurementmodel.h
     heatmap.h
@@ -68,6 +69,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     measurementtypemodel.h
     entries.h
     measurementcontroller.h
+    statusqueue.h
 
     qml.qrc
 )

@@ -38,7 +38,7 @@ void WindowsScan::onData(unsigned long waitResult) {
   mScanning = false;
 
   if (waitResult != 0) {
-    emit scanFailed(waitResult);
+    emit scanFailed(waitResult, QString::number(waitResult)); // FIXME
     return;
   }
 
@@ -46,7 +46,7 @@ void WindowsScan::onData(unsigned long waitResult) {
   if (res.size() > 0) {
     emit scanFinished(res);
   } else {
-    emit scanFailed(254);
+    emit scanFailed(254, "no results");
   }
 }
 

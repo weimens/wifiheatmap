@@ -1,7 +1,8 @@
 #include "measurementcontroller.h"
 
-MeasurementController::MeasurementController(QObject *parent)
-    : QObject(parent) {
+MeasurementController::MeasurementController(StatusQueue *statusQueue,
+                                             QObject *parent)
+    : QObject(parent), mStatusQueue(statusQueue) {
 
 #ifdef Q_OS_ANDROID
   mAndroidScan = new AndroidScan(this);
@@ -51,7 +52,7 @@ bool MeasurementController::measure(QPoint pos) {
 #endif
   if (mTaskqueue.size() > 0) {
     emit scanStarted(pos);
-    mTaskqueue.run(0);
+    mTaskqueue.run(0, "");
     return true;
   }
   return false;
@@ -92,10 +93,11 @@ WindowsInterfaceModel *MeasurementController::windowsInterfaceModel() {
 }
 #endif
 
-void MeasurementController::onDone(int err) {
+void MeasurementController::onDone(int err, QString message) {
   if (err == 0) {
     emit scanFinished(mResults);
   } else {
+    mStatusQueue->push(message);
     emit scanFailed(0);
   }
   mScanning = false;

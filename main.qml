@@ -263,7 +263,7 @@ ApplicationWindow {
 
     Flow {
         id: flow
-        width: window.width - 2 * flow.spacing
+        width: window.width - 2 * flow.spacing - sidebarWidth * !sidebarDisabled
         spacing: 5
         layoutDirection: Qt.RightToLeft
 
@@ -382,6 +382,24 @@ ApplicationWindow {
                             value: zmaxInput.value
                         }
                     }
+                }
+            }
+        }
+
+        Rectangle {
+            height: childrenRect.height
+            width: childrenRect.width
+            color: "#77a50026"
+            ListView {
+                visible: statusQueue.size
+                width: contentItem.childrenRect.width
+                height: 30 * statusQueue.size
+                model: statusQueue
+                delegate: Text {
+                    padding: 5
+                    height: 30
+                    verticalAlignment: Text.AlignVCenter
+                    text: display
                 }
             }
         }

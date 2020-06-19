@@ -3,6 +3,7 @@
 #include <QObject>
 
 #include "measurementmodel.h"
+#include "statusqueue.h"
 
 #if defined(Q_OS_ANDROID)
 #include "androidscan.h"
@@ -25,13 +26,13 @@ public:
   void onFinished(QVector<MeasurementEntry> res) {
     for (auto r : res)
       mResults.push_back(r);
-    emit done(0);
+    emit done(0, "");
     this->disconnect();
     this->deleteLater(); // FIXME:
   }
 
-  void onFailed(int err) {
-    emit done(err);
+  void onFailed(int err, QString message) {
+    emit done(err, message);
     this->disconnect();
     this->deleteLater(); // FIXME:
   }
@@ -39,7 +40,7 @@ public:
   virtual void run() = 0;
 
 signals:
-  void done(int err);
+  void done(int err, QString message);
 
 private:
   QVector<MeasurementEntry> &mResults;
@@ -59,7 +60,7 @@ public:
     mAndroidScan->connect(mAndroidScan, &AndroidScan::scanFailed, this,
                           &AndroidScanTask::onFailed);
     if (!mAndroidScan->measure())
-      onFailed(254);
+      onFailed(254, "scan not allowed");
   }
 
 private:
@@ -130,23 +131,23 @@ public:
   void enqueue(Task *task) { queue.enqueue(task); }
   int size() { return queue.size(); }
 
-  void run(int err) {
+  void run(int err, QString message) {
     if (err != 0) {
       queue.clear();
-      emit done(err);
+      emit done(err, message);
     } else {
       if (!queue.isEmpty()) {
         auto task = queue.dequeue();
         task->connect(task, &Task::done, this, &TaskQueue::run);
         task->run();
       } else {
-        emit done(0);
+        emit done(0, "");
       }
     }
   }
 
 signals:
-  void done(int err);
+  void done(int err, QString message);
 
 private:
   QQueue<Task *> queue{};
@@ -168,7 +169,8 @@ class MeasurementController : public QObject {
 #endif
 
 public:
-  explicit MeasurementController(QObject *parent = nullptr);
+  explicit MeasurementController(StatusQueue *statusStack,
+                                 QObject *parent = nullptr);
 
   Q_INVOKABLE bool measure(QPoint pos);
 
@@ -193,11 +195,12 @@ signals:
   void scanFailed(int err);
 
 public slots:
-  void onDone(int err);
+  void onDone(int err, QString message);
 
 private:
   bool mScanning{false};
   QVector<MeasurementEntry> mResults{};
+  StatusQueue *mStatusQueue;
   bool mScan{false};
   TaskQueue mTaskqueue;
 #ifdef Q_OS_ANDROID

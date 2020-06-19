@@ -22,7 +22,7 @@ public slots:
 
 signals:
   void scanFinished(QVector<MeasurementEntry> results);
-  void scanFailed(int err);
+  void scanFailed(int err, QString message);
   void triggerScan(int interfaceIndex);
 
 private:

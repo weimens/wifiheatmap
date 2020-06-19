@@ -42,7 +42,7 @@ std::optional<MeasurementEntry> LinuxScan::connected() {
       return res;
     }
   }
-  emit scanFailed(254);
+  emit scanFailed(254, "not connected?"); // FIXME
   return {};
 }
 
@@ -106,22 +106,22 @@ void LinuxScan::onData() {
     if (res.size() > 0) {
       emit scanFinished(res);
     } else {
-      emit scanFailed(254);
+      emit scanFailed(254, "no results");
     }
 
     return;
   } else if (msg[0] == "ERR" && msg.length() == 3) {
     int err = msg[2].toInt();
-    emit scanFailed(err);
+    emit scanFailed(err, "wifi disabled?"); // FIXME
     return;
   }
-  emit scanFailed(255);
+  emit scanFailed(255, "err? FIXME");
 }
 
 void LinuxScan::timeout() {
   mScanning = false;
   mTimer->stop();
-  emit scanFailed(254);
+  emit scanFailed(254, "timeout");
 }
 
 void LinuxScan::onScannerStateChanged(QProcess::ProcessState newState) {

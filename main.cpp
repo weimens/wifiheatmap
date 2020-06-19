@@ -14,6 +14,7 @@
 #include "measurementcontroller.h"
 #include "measurementtypemodel.h"
 #include "qmlsortfilterproxymodel.h"
+#include "statusqueue.h"
 
 int main(int argc, char *argv[]) {
   QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
@@ -58,8 +59,10 @@ int main(int argc, char *argv[]) {
   bssModel.measurementsChanged(document->measurements());
   const QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
 
+  StatusQueue *statusQueue = new StatusQueue(&app);
+
   MeasurementController *controller =
-      new MeasurementController(&app);
+      new MeasurementController(statusQueue, &app);
   QObject::connect(controller, &MeasurementController::scanFinished, posModel,
                    &MeasurementModel::scanFinished);
   QObject::connect(controller, &MeasurementController::scanFailed, posModel,
@@ -76,6 +79,7 @@ int main(int argc, char *argv[]) {
   ctxt->setContextProperty("typeModel", typeModel);
   ctxt->setContextProperty("heatMapLegend", heatMapLegend);
   ctxt->setContextProperty("typeModel", typeModel);
+  ctxt->setContextProperty("statusQueue", statusQueue);
 
   QmlSortFilterProxyModel *proxyBssModel = new QmlSortFilterProxyModel(&app);
   proxyBssModel->setSourceModel(&bssModel);

@@ -75,7 +75,7 @@ void AndroidScan::onData() {
   if (res.size() > 0) {
     emit scanFinished(res);
   } else {
-    emit scanFailed(254);
+    emit scanFailed(254, "No scan results.");
   }
 }
 

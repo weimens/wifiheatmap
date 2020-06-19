@@ -6,7 +6,12 @@ import QtQuick.Controls 2.3
 TableView {
     id: tableView
     model: bssmodel
-    property var columnWidths: [200, 165, 45, 30, 30]
+    property var column1: width - (165 + 45 + 30 + 30)
+    property var columnWidths: [column1, 165, 45, 30, 30]
+
+    onWidthChanged: {
+        tableView.forceLayout()
+    }
 
     columnWidthProvider: function (column) {
         return columnWidths[column]

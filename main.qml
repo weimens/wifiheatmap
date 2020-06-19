@@ -203,15 +203,8 @@ ApplicationWindow {
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
-                        if (Qt.platform.os == "linux") {
-                            linuxScan.measure(Qt.point(mouse.x, mouse.y))
-                        }
-                        if (Qt.platform.os == "android") {
-                            androidScan.measure(Qt.point(mouse.x, mouse.y))
-                        }
-                        if (Qt.platform.os == "windows") {
-                            windowsScan.measure(Qt.point(mouse.x, mouse.y))
-                        }
+                        this.forceActiveFocus()
+                        controller.measure(Qt.point(mouse.x, mouse.y))
                     }
                 }
             }
@@ -405,32 +398,80 @@ ApplicationWindow {
         position: sidebarDisabled ? 0 : 1
         visible: !sidebarDisabled
 
-        ColumnLayout {
-            anchors.fill: parent
-
-            Button {
-                visible: Qt.platform.os == "linux"
-                text: Qt.platform.os == "linux"
-                      && linuxScan.running ? "stop scan process" : "start scan process"
-                onClicked: Qt.platform.os == "linux"
-                           && linuxScan.start_scanner()
-                Layout.fillWidth: true
-                Layout.topMargin: 5
-            }
-
+        Component {
+            id: interfaceComponent
             ComboBox {
-                visible: Qt.platform.os == "linux"
-                         || Qt.platform.os == "windows"
                 id: interfaceComboBox
-                model: (Qt.platform.os == "linux"
-                        || Qt.platform.os == "windows") ? interfaceModel : undefined
+                model: controller.interfaceModel
                 textRole: "name"
-                Layout.fillWidth: true
 
                 Binding {
-                    target: interfaceModel //FIXME
+                    target: controller.interfaceModel
                     property: "currentIndex"
                     value: interfaceComboBox.currentIndex
+                }
+            }
+        }
+
+        Component {
+            id: interfaceWindowsComponent
+            ComboBox {
+                id: interfaceComboBox
+                model: controller.windowsInterfaceModel
+                textRole: "name"
+
+                Binding {
+                    target: controller.windowsInterfaceModel
+                    property: "currentIndex"
+                    value: interfaceComboBox.currentIndex
+                }
+            }
+        }
+
+        Component {
+            id: scanProcessComponent
+
+            Switch {
+                id: connectedScan
+                text: "connected or scan"
+                checked: controller.scan
+
+                Binding {
+                    target: controller
+                    property: "scan"
+                    value: connectedScan.checked
+                }
+            }
+        }
+
+        ColumnLayout {
+            anchors.fill: parent
+            anchors.topMargin: 5
+
+            Loader {
+                Layout.fillWidth: true
+                Component.onCompleted: {
+                    if (Qt.platform.os == "linux") {
+                        this.sourceComponent = interfaceComponent
+                    }
+                }
+            }
+
+            Loader {
+                Layout.fillWidth: true
+                Component.onCompleted: {
+                    if (Qt.platform.os == "windows") {
+                        this.sourceComponent = interfaceWindowsComponent
+                    }
+                }
+            }
+
+            Loader {
+                Layout.fillWidth: true
+                Component.onCompleted: {
+                    if (Qt.platform.os == "linux") {
+                        this.sourceComponent = scanProcessComponent
+                    }
                 }
             }
 

@@ -50,12 +50,11 @@ void WindowsScan::onData(unsigned long waitResult) {
   }
 }
 
-bool WindowsScan::measure(QPoint pos) {
+bool WindowsScan::measure() {
   if (mScanning)
     return false;
   mScanning = true;
 
-  emit scanStarted(pos);
   emit triggerScan(mInterfaceIndex);
 
   return false;

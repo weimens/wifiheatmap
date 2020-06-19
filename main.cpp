@@ -11,19 +11,9 @@
 #include "document.h"
 #include "heatmap.h"
 #include "imageprovider.h"
-#include "measurementmodel.h"
+#include "measurementcontroller.h"
 #include "measurementtypemodel.h"
 #include "qmlsortfilterproxymodel.h"
-
-#ifdef Q_OS_ANDROID
-#include "androidscan.h"
-#elif defined(Q_OS_LINUX)
-#include "interfacemodel.h"
-#include "linuxscan.h"
-#elif defined(Q_OS_WIN)
-#include "windowsinterfacemodel.h"
-#include "windowsscan.h"
-#endif
 
 int main(int argc, char *argv[]) {
   QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
@@ -68,50 +58,22 @@ int main(int argc, char *argv[]) {
   bssModel.measurementsChanged(document->measurements());
   const QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
 
-#ifdef Q_OS_ANDROID
-  AndroidScan *androidScan = new AndroidScan(&app);
-  QObject::connect(androidScan, &AndroidScan::scanFinished, posModel,
+  MeasurementController *controller =
+      new MeasurementController(&app);
+  QObject::connect(controller, &MeasurementController::scanFinished, posModel,
                    &MeasurementModel::scanFinished);
-  QObject::connect(androidScan, &AndroidScan::scanFailed, posModel,
+  QObject::connect(controller, &MeasurementController::scanFailed, posModel,
                    &MeasurementModel::scanFailed);
-  QObject::connect(androidScan, &AndroidScan::scanStarted, posModel,
+  QObject::connect(controller, &MeasurementController::scanStarted, posModel,
                    &MeasurementModel::scanStarted);
-  ctxt->setContextProperty("androidScan", androidScan);
-#elif defined(Q_OS_LINUX)
-  LinuxScan *linuxScan = new LinuxScan(&app);
-  QObject::connect(linuxScan, &LinuxScan::scanFinished, posModel,
-                   &MeasurementModel::scanFinished);
-  QObject::connect(linuxScan, &LinuxScan::scanFailed, posModel,
-                   &MeasurementModel::scanFailed);
-  QObject::connect(linuxScan, &LinuxScan::scanStarted, posModel,
-                   &MeasurementModel::scanStarted);
-  InterfaceModel *interfaceModel = new InterfaceModel(&app);
-  QObject::connect(interfaceModel, &InterfaceModel::currentInterfaceChanged,
-                   linuxScan, &LinuxScan::setInterfaceIndex);
-  ctxt->setContextProperty("linuxScan", linuxScan);
-  ctxt->setContextProperty("interfaceModel", interfaceModel);
-#elif defined(Q_OS_WIN)
-  WindowsScan *windowsScan = new WindowsScan(&app);
-  QObject::connect(windowsScan, &WindowsScan::scanFinished, posModel,
-                   &MeasurementModel::scanFinished);
-  QObject::connect(windowsScan, &WindowsScan::scanFailed, posModel,
-                   &MeasurementModel::scanFailed);
-  QObject::connect(windowsScan, &WindowsScan::scanStarted, posModel,
-                   &MeasurementModel::scanStarted);
-  WindowsInterfaceModel *windowsInterfaceModel =
-      new WindowsInterfaceModel(&app);
-  QObject::connect(windowsInterfaceModel,
-                   &WindowsInterfaceModel::currentInterfaceChanged, windowsScan,
-                   &WindowsScan::setInterfaceIndex);
-  ctxt->setContextProperty("windowsScan", windowsScan);
-  ctxt->setContextProperty("interfaceModel", windowsInterfaceModel);
-#endif
 
   ctxt->setContextProperty("posModel", posModel);
+  ctxt->setContextProperty("controller", controller);
   ctxt->setContextProperty("document", document);
   ctxt->setContextProperty("fixedFont", fixedFont);
   ctxt->setContextProperty("heatMapCalc", heatMapCalc);
   ctxt->setContextProperty("undoStack", undoStack);
+  ctxt->setContextProperty("typeModel", typeModel);
   ctxt->setContextProperty("heatMapLegend", heatMapLegend);
   ctxt->setContextProperty("typeModel", typeModel);
 

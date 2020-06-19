@@ -10,12 +10,11 @@ class AndroidScan : public QObject {
 public:
   explicit AndroidScan(QObject *parent);
 
-  Q_INVOKABLE bool measure(QPoint pos);
+  Q_INVOKABLE bool measure();
 
   QVector<MeasurementEntry> results();
   Q_INVOKABLE void onData();
 signals:
-  void scanStarted(QPoint pos);
   void scanFinished(QVector<MeasurementEntry> results);
   void scanFailed(int err);
 

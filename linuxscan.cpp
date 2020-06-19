@@ -2,7 +2,7 @@
 #include "netlinkwrapper.h"
 
 LinuxScan::LinuxScan(QObject *parent)
-    : QObject(parent), mScanning(false), mScanNum(0), mRunning(false) {
+    : QObject(parent), mScanning(false), mScanNum(0) {
 
   mScanner = new QProcess(this);
   connect(mScanner, &QProcess::readyReadStandardOutput, this,
@@ -22,33 +22,33 @@ LinuxScan::~LinuxScan() {
   }
 }
 
-bool LinuxScan::measure(QPoint pos) {
+std::optional<MeasurementEntry> LinuxScan::connected() {
+  NetLink::Nl80211 nl80211;
+  NetLink::MessageLink msgLink(mInterfaceIndex);
+  nl80211.sendMessageWait(&msgLink);
+  auto link = msgLink.getLink();
+  if (link.link_found) {
+    NetLink::MessageStation msgStation(mInterfaceIndex, link);
+    int state = nl80211.sendMessageWait(&msgStation);
+    if (state == 0) {
+      auto station = msgStation.getStation();
+
+      auto bss =
+          Bss{QString::fromStdString(link.bssid),
+              QString::fromStdString(link.ssid), link.freq, link.channel};
+
+      auto res = MeasurementEntry{bss, WiFiSignal, station.signal};
+      emit scanFinished({res});
+      return res;
+    }
+  }
+  emit scanFailed(254);
+  return {};
+}
+
+bool LinuxScan::measure() {
   if (mScanning) {
     return false;
-  }
-  if (mScanner->state() != QProcess::Running) {
-    NetLink::Nl80211 nl80211;
-    NetLink::MessageLink msgLink(mInterfaceIndex);
-    nl80211.sendMessageWait(&msgLink);
-    auto link = msgLink.getLink();
-    if (link.link_found) {
-      emit scanStarted(pos);
-      NetLink::MessageStation msgStation(mInterfaceIndex, link);
-      int state = nl80211.sendMessageWait(&msgStation);
-      if (state == 0) {
-        auto station = msgStation.getStation();
-
-        auto bss =
-            Bss{QString::fromStdString(link.bssid),
-                QString::fromStdString(link.ssid), link.freq, link.channel};
-
-        emit scanFinished({MeasurementEntry{bss, WiFiSignal, station.signal}});
-      } else {
-        emit scanFailed(state);
-      }
-    }
-
-    return true;
   }
   mScanning = true;
   mTimer->start(10000);
@@ -58,23 +58,24 @@ bool LinuxScan::measure(QPoint pos) {
                       .arg(mScanNum)
                       .toStdString()
                       .c_str());
-  emit scanStarted(pos);
   return true;
 }
 
 void LinuxScan::start_scanner() {
-  if (mScanner->state() == QProcess::ProcessState::Running) {
-    mScanner->write("QUIT\n");
+  if (mScanner->state() == QProcess::ProcessState::Running)
     return;
-  }
   QString program = "pkexec";
   QStringList arguments;
   arguments << TRIGGER_SCAN_BIN;
 
   mScanner->start(program, arguments);
-  if (!mScanner->waitForStarted()) {
+  mScanner->waitForStarted();
+}
+
+void LinuxScan::stop_scanner() {
+  if (mScanner->state() != QProcess::ProcessState::Running)
     return;
-  }
+  mScanner->write("QUIT\n");
 }
 
 QVector<MeasurementEntry> LinuxScan::results() {
@@ -124,8 +125,8 @@ void LinuxScan::timeout() {
 }
 
 void LinuxScan::onScannerStateChanged(QProcess::ProcessState newState) {
-  mRunning = newState == QProcess::ProcessState::Running;
-  emit runningChanged();
+  if (newState != QProcess::ProcessState::Running)
+    emit stopped(false);
 }
 
 void LinuxScan::setInterfaceIndex(int index) { mInterfaceIndex = index; }

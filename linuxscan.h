@@ -10,17 +10,17 @@
 
 class LinuxScan : public QObject {
   Q_OBJECT
-
-  Q_PROPERTY(bool running MEMBER mRunning NOTIFY runningChanged)
   Q_PROPERTY(int interfaceIndex WRITE setInterfaceIndex)
 
 public:
   explicit LinuxScan(QObject *parent = nullptr);
   virtual ~LinuxScan();
 
-  Q_INVOKABLE void start_scanner();
+  void start_scanner();
+  void stop_scanner();
 
-  Q_INVOKABLE bool measure(QPoint pos);
+  std::optional<MeasurementEntry> connected();
+  bool measure();
   QVector<MeasurementEntry> results();
 public slots:
   void onData();
@@ -32,8 +32,7 @@ public slots:
   void setInterfaceIndex(int index);
 
 signals:
-  void runningChanged();
-  void scanStarted(QPoint pos);
+  void stopped(bool value);
   void scanFinished(QVector<MeasurementEntry> results);
   void scanFailed(int err);
 
@@ -42,6 +41,5 @@ private:
   QProcess *mScanner;
   int mScanNum;
   QTimer *mTimer;
-  bool mRunning;
   int mInterfaceIndex{0};
 };

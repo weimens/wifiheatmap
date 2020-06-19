@@ -14,7 +14,7 @@ add_test(tst_measurements tst_measurements)
 target_include_directories(tst_measurements PRIVATE ..)
 set_target_properties(tst_measurements
   PROPERTIES
-    CXX_STANDARD 11
+    CXX_STANDARD 17
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS NO
     AUTOMOC ON
@@ -37,7 +37,7 @@ add_test(tst_bssmodel tst_bssmodel)
 target_include_directories(tst_bssmodel PRIVATE ..)
 set_target_properties(tst_bssmodel
   PROPERTIES
-    CXX_STANDARD 11
+    CXX_STANDARD 17
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS NO
     AUTOMOC ON
@@ -63,7 +63,7 @@ add_test(tst_measurementmodel tst_measurementmodel)
 target_include_directories(tst_measurementmodel PRIVATE ..)
 set_target_properties(tst_measurementmodel
   PROPERTIES
-    CXX_STANDARD 11
+    CXX_STANDARD 17
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS NO
     AUTOMOC ON
@@ -87,7 +87,7 @@ add_test(tst_document tst_document)
 target_include_directories(tst_document PRIVATE ..)
 set_target_properties(tst_document
   PROPERTIES
-    CXX_STANDARD 11
+    CXX_STANDARD 17
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS NO
     AUTOMOC ON
@@ -116,7 +116,7 @@ add_test(tst_heatmap tst_heatmap)
 target_include_directories(tst_heatmap PRIVATE ..)
 set_target_properties(tst_heatmap
   PROPERTIES
-    CXX_STANDARD 11
+    CXX_STANDARD 17
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS NO
     AUTOMOC ON

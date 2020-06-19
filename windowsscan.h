@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QThread>
+#include <QVector>
 
 #include "entries.h"
 
@@ -11,7 +12,7 @@ public:
   explicit WindowsScan(QObject *parent);
   ~WindowsScan();
 
-  Q_INVOKABLE bool measure(QPoint pos);
+  bool measure();
 
   QVector<MeasurementEntry> results();
   void onData(unsigned long waitResult);
@@ -20,7 +21,6 @@ public slots:
   void setInterfaceIndex(int index);
 
 signals:
-  void scanStarted(QPoint pos);
   void scanFinished(QVector<MeasurementEntry> results);
   void scanFailed(int err);
   void triggerScan(int interfaceIndex);

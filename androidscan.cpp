@@ -79,7 +79,7 @@ void AndroidScan::onData() {
   }
 }
 
-bool AndroidScan::measure(QPoint pos) {
+bool AndroidScan::measure() {
   if (mScanning)
     return false;
   if (!(checkPermission("CHANGE_WIFI_STATE") &&
@@ -100,7 +100,6 @@ bool AndroidScan::measure(QPoint pos) {
       QtAndroid::androidActivity().callMethod<void>(
           "registerBroadcastReceiver");
       mScanning = true;
-      emit scanStarted(pos);
       return true;
     }
   }

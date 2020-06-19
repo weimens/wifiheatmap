@@ -54,6 +54,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     helper.cpp
     commands.cpp
     measurementtypemodel.cpp
+    measurementcontroller.cpp
 
     measurementmodel.h
     heatmap.h
@@ -66,6 +67,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     commands.h
     measurementtypemodel.h
     entries.h
+    measurementcontroller.h
 
     qml.qrc
 )
@@ -103,7 +105,7 @@ endif()
 
 set_target_properties(${PROJECT_NAME}
   PROPERTIES
-    CXX_STANDARD 11
+    CXX_STANDARD 17
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS NO
     AUTOUIC ON

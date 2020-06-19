@@ -9,6 +9,7 @@
 #include "androidscan.h"
 #elif defined(Q_OS_LINUX)
 #include "interfacemodel.h"
+#include "iperf.h"
 #include "linuxscan.h"
 #elif defined(Q_OS_WIN)
 #include "windowsinterfacemodel.h"
@@ -86,6 +87,35 @@ private:
   LinuxScan *mLinuxScan;
 };
 
+class IperfTask : public Task {
+public:
+  IperfTask(IPerfScan *iPerfScan, LinuxScan *linuxScan,
+            QVector<MeasurementEntry> &results)
+      : Task(results), mLinuxScan(linuxScan), mIPerfScan(iPerfScan) {}
+
+  void run() {
+    mIPerfScan->connect(mIPerfScan, &IPerfScan::scanFinished, this,
+                        &IperfTask::onFinished);
+    mIPerfScan->connect(mIPerfScan, &IPerfScan::scanFailed, this,
+                        &IperfTask::onFailed);
+    mLinuxScan->connect(mLinuxScan, &LinuxScan::scanFailed, this,
+                        &IperfTask::onFailed);
+
+    mLinuxScan->blockSignals(true); // FIXME
+    auto measurementEntry = mLinuxScan->connected();
+    mLinuxScan->blockSignals(false);
+
+    if (measurementEntry.has_value())
+      mIPerfScan->measure(measurementEntry.value());
+    else
+      onFailed(254, "not connected?");
+  }
+
+private:
+  LinuxScan *mLinuxScan;
+  IPerfScan *mIPerfScan;
+};
+
 class ConnectedTask : public Task {
   Q_OBJECT
 public:
@@ -156,10 +186,12 @@ private:
 class MeasurementController : public QObject {
   Q_OBJECT
 
+  Q_PROPERTY(bool iperf READ iperf WRITE setIperf NOTIFY iperfChanged)
   Q_PROPERTY(bool scan READ scan WRITE setScan NOTIFY scanChanged)
 
 #if defined(Q_OS_ANDROID) // FIXME:
 #elif defined(Q_OS_LINUX)
+  Q_PROPERTY(IPerfScan *iPerfScan READ iperfScan NOTIFY iperfScanChanged)
   Q_PROPERTY(InterfaceModel *interfaceModel READ interfaceModel NOTIFY
                  interfaceModelChanged)
   Q_PROPERTY(LinuxScan *linuxScan READ linuxScan NOTIFY linuxScanChanged)
@@ -174,11 +206,14 @@ public:
 
   Q_INVOKABLE bool measure(QPoint pos);
 
+  bool iperf();
+  void setIperf(bool value);
   bool scan();
   void setScan(bool value);
 
 #if defined(Q_OS_ANDROID) // FIXME:
 #elif defined(Q_OS_LINUX)
+  IPerfScan *iperfScan();
   InterfaceModel *interfaceModel();
   LinuxScan *linuxScan();
 #elif defined(Q_OS_WINDOWS)
@@ -186,7 +221,9 @@ public:
 #endif
 
 signals:
+  void iperfChanged(bool value);
   void scanChanged(bool value);
+  void iperfScanChanged();
   void interfaceModelChanged();
   void linuxScanChanged();
 
@@ -201,6 +238,7 @@ private:
   bool mScanning{false};
   QVector<MeasurementEntry> mResults{};
   StatusQueue *mStatusQueue;
+  bool mIperf{false};
   bool mScan{false};
   TaskQueue mTaskqueue;
 #ifdef Q_OS_ANDROID
@@ -208,6 +246,7 @@ private:
 #elif defined(Q_OS_LINUX)
   LinuxScan *mLinuxScan;
   InterfaceModel *mInterfaceModel;
+  IPerfScan *mIPerfScan;
 #elif defined(Q_OS_WIN)
   WindowsScan *mWindowsScan;
   WindowsInterfaceModel *mWindowsInterfaceModel;

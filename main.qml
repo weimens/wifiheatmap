@@ -246,7 +246,6 @@ ApplicationWindow {
                 Repeater {
                     model: posModel
                     delegate: Marker {
-                        width: 20
                         height: 20
                     }
                 }
@@ -462,6 +461,63 @@ ApplicationWindow {
             }
         }
 
+        Component {
+            id: iperfComponent
+            Row {
+                Switch {
+                    id: iperf
+                    text: "iperf"
+                    checked: controller.iperf
+
+                    Binding {
+                        target: controller
+                        property: "iperf"
+                        value: iperf.checked
+                    }
+                }
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: controller.iperf
+                    text: "server: "
+                }
+
+                TextInput {
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: controller.iperf
+                    id: serverHostInput
+                    text: controller.iPerfScan.serverHost
+                    Binding {
+                        target: controller.iPerfScan
+                        property: "serverHost"
+                        value: serverHostInput.text
+                    }
+                }
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: controller.iperf
+                    text: ":"
+                }
+
+                TextInput {
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: controller.iperf
+                    id: serverPortInput
+                    text: controller.iPerfScan.serverPort
+                    validator: IntValidator {
+                        bottom: 0
+                        top: 65536
+                    }
+                    Binding {
+                        target: controller.iPerfScan
+                        property: "serverPort"
+                        value: serverPortInput.text
+                    }
+                }
+            }
+        }
+
         ColumnLayout {
             anchors.fill: parent
             anchors.topMargin: 5
@@ -489,6 +545,15 @@ ApplicationWindow {
                 Component.onCompleted: {
                     if (Qt.platform.os == "linux") {
                         this.sourceComponent = scanProcessComponent
+                    }
+                }
+            }
+
+            Loader {
+                Layout.fillWidth: true
+                Component.onCompleted: {
+                    if (Qt.platform.os == "linux") {
+                        this.sourceComponent = iperfComponent
                     }
                 }
             }

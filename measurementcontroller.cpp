@@ -12,9 +12,14 @@ MeasurementController::MeasurementController(StatusQueue *statusQueue,
                    &MeasurementController::setScan);
   emit linuxScanChanged();
 
+  mIPerfScan = new IPerfScan(this);
+  emit iperfScanChanged();
+
   mInterfaceModel = new InterfaceModel(this);
   QObject::connect(mInterfaceModel, &InterfaceModel::currentInterfaceChanged,
                    mLinuxScan, &LinuxScan::setInterfaceIndex);
+  QObject::connect(mInterfaceModel, &InterfaceModel::currentInterfaceChanged,
+                   mIPerfScan, &IPerfScan::setInterfaceIndex);
   emit interfaceModelChanged();
 
 #elif defined(Q_OS_WIN)
@@ -42,6 +47,10 @@ bool MeasurementController::measure(QPoint pos) {
     ScanTask *t = new ScanTask{mLinuxScan, mResults};
     mTaskqueue.enqueue(t);
   }
+  if (mIperf) {
+    Task *t = new IperfTask{mIPerfScan, mLinuxScan, mResults};
+    mTaskqueue.enqueue(t);
+  }
   if (!mScan) {
     Task *t = new ConnectedTask{mLinuxScan, mResults};
     mTaskqueue.enqueue(t);
@@ -56,6 +65,15 @@ bool MeasurementController::measure(QPoint pos) {
     return true;
   }
   return false;
+}
+
+bool MeasurementController::iperf() { return mIperf; }
+
+void MeasurementController::setIperf(bool value) {
+  if (mIperf == value)
+    return;
+  mIperf = value;
+  emit iperfChanged(mIperf);
 }
 
 bool MeasurementController::scan() { return mScan; }
@@ -81,6 +99,7 @@ void MeasurementController::setScan(bool value) {
 
 #if defined(Q_OS_ANDROID) // FIXME:
 #elif defined(Q_OS_LINUX)
+IPerfScan *MeasurementController::iperfScan() { return mIPerfScan; }
 
 InterfaceModel *MeasurementController::interfaceModel() {
   return mInterfaceModel;

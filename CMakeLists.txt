@@ -19,6 +19,7 @@ if(UNIX AND NOT ANDROID)
         INTERFACE_INCLUDE_DIRECTORIES "${GENL3_INCLUDE_DIRS}"
         INTERFACE_LINK_LIBRARIES "${GENL3_LIBRARIES}"
     )
+    find_library(IPERF iperf)
 endif()
 
 if (NOT TARGET QuaZip5::QuaZip5)
@@ -87,9 +88,13 @@ if(UNIX AND NOT ANDROID)
         linuxscan.cpp
         netlinkwrapper.cpp
         interfacemodel.cpp
+        iperfwrapper.cpp
+        iperf.cpp
         linuxscan.h
         netlinkwrapper.h
         interfacemodel.h
+        iperfwrapper.h
+        iperf.h
     )
 endif()
 if(WIN32)
@@ -142,6 +147,7 @@ else()
 endif()
 if(UNIX AND NOT ANDROID)
     target_link_libraries(${PROJECT_NAME} PRIVATE nl3::genl)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${IPERF})
     add_subdirectory(trigger_scan)
     add_subdirectory(installer/XDGData)
     install(TARGETS ${PROJECT_NAME} DESTINATION bin)

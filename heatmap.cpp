@@ -137,6 +137,25 @@ void HeatMapLegend::selectedTypeChanged(MeasurementType selectedType) {
     max = -54;
     mFlip = -1;
     break;
+  case IperfRx:
+  case IperfTx:
+    stepSize = 1000 * 1000;
+    from = 0;
+    to = 1000 * stepSize;
+    mZunit = "MBit/s";
+    min = 11 * 1000 * 1000;
+    max = 97 * 1000 * 1000;
+    mFlip = -1;
+    break;
+  case IperfRetransmits:
+    stepSize = 1;
+    from = 0;
+    to = 500;
+    mZunit = "";
+    min = 10;
+    max = 0;
+    mFlip = 1;
+    break;
   }
 
   if (mStepSize != stepSize) {

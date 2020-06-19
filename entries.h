@@ -29,7 +29,7 @@ struct Bss {
   }
 };
 
-enum MeasurementType { WiFiSignal };
+enum MeasurementType { WiFiSignal, IperfRx, IperfTx, IperfRetransmits };
 
 struct MeasurementEntry {
   Bss bss;

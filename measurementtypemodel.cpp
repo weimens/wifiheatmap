@@ -16,6 +16,12 @@ QVariant MeasurementTypeModel::data(const QModelIndex &index, int role) const {
     switch (measurementType) {
     case WiFiSignal:
       return "WiFi signal";
+    case IperfRx:
+      return "Iperf RX";
+    case IperfTx:
+      return "Iperf TX";
+    case IperfRetransmits:
+      return "Iperf retransmits";
     default:
       break;
     }

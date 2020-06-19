@@ -2,6 +2,7 @@ import QtQuick 2.12
 
 Item {
     id: marker
+    width: Math.max(20, markerText.implicitWidth)
     Rectangle {
         x: -parent.width / 2
         y: -parent.height / 2
@@ -31,16 +32,18 @@ Item {
                                  posModel.remove(index)
             drag.onActiveChanged: {
                 if (!markerarea.drag.active) {
+                    this.forceActiveFocus()
                     pos = Qt.point(marker.x, marker.y)
                 }
             }
         }
 
         Text {
+            id: markerText
             text: {
                 if (isNaN(model.z))
                     return ""
-                return Math.round(model.z * (-1))
+                return Math.round(model.z / heatMapLegend.zstepSize)
             }
             anchors.fill: parent
             horizontalAlignment: Text.AlignHCenter

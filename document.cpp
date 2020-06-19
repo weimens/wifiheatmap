@@ -35,6 +35,10 @@ bool Document::save(QUrl fileUrl) {
     point["x"] = position.pos.x();
     point["y"] = position.pos.y();
     QJsonArray scanInfo;
+    QJsonArray iperfRxInfo;
+    QJsonArray iperfTxInfo;
+    QJsonArray iperfRetransmitsInfo;
+
     for (auto s : mMeasurements->measurementsAt(position)) {
       QJsonObject scanItem;
       scanItem["bssid"] = s.bss.bssid;
@@ -46,9 +50,25 @@ bool Document::save(QUrl fileUrl) {
         scanItem["signal"] = s.value;
         scanInfo.append(scanItem);
         break;
+      case IperfRx:
+        scanItem["value"] = s.value;
+        iperfRxInfo.append(scanItem);
+        break;
+      case IperfTx:
+        scanItem["value"] = s.value;
+        iperfTxInfo.append(scanItem);
+        break;
+      case IperfRetransmits:
+        scanItem["value"] = s.value;
+        iperfRetransmitsInfo.append(scanItem);
+        break;
       }
     }
     point["scanInfo"] = scanInfo;
+    point["iperfRx"] = iperfRxInfo;
+    point["iperfTxInfo"] = iperfTxInfo;
+    point["iperfRetransmitsInfo"] = iperfRetransmitsInfo;
+
     data.append(point);
   }
   root["data"] = data;
@@ -100,6 +120,24 @@ void Document::load(QUrl fileUrl) {
 
 Measurements *Document::measurements() const { return mMeasurements.get(); }
 
+void helper(const QJsonObject &point, QString name,
+            MeasurementType measurementType, QVector<MeasurementEntry> &scans) {
+  QJsonArray iperfRxInfo = point[name].toArray();
+  for (int j = 0; j < iperfRxInfo.size(); ++j) {
+    QJsonObject scanItem = iperfRxInfo[j].toObject();
+    if (scanItem.contains("bssid") && scanItem["bssid"].isString() &&
+        scanItem.contains("ssid") && scanItem["ssid"].isString() &&
+        scanItem.contains("value") && scanItem["value"].isDouble() &&
+        scanItem.contains("freq") && scanItem["freq"].isDouble() &&
+        scanItem.contains("channel") && scanItem["channel"].isDouble()) {
+
+      Bss bss{scanItem["bssid"].toString(), scanItem["ssid"].toString(),
+              scanItem["freq"].toInt(), scanItem["channel"].toInt()};
+      scans.push_back({bss, measurementType, scanItem["value"].toDouble()});
+    }
+  }
+}
+
 void Document::read(QByteArray data) {
   QJsonDocument jdoc(QJsonDocument::fromJson(data));
   QJsonObject root = jdoc.object();
@@ -113,6 +151,10 @@ void Document::read(QByteArray data) {
           point["scanInfo"].isArray()) {
 
         QVector<MeasurementEntry> scans;
+
+        helper(point, "iperfRx", IperfRx, scans);
+        helper(point, "iperfTxInfo", IperfTx, scans);
+        helper(point, "iperfRetransmitsInfo", IperfRetransmits, scans);
 
         QJsonArray scanInfo = point["scanInfo"].toArray();
         for (int j = 0; j < scanInfo.size(); ++j) {

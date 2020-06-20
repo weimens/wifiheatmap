@@ -10,6 +10,7 @@ class AndroidScan : public QObject {
 public:
   explicit AndroidScan(QObject *parent);
 
+  std::optional<MeasurementEntry> connected();
   Q_INVOKABLE bool measure();
 
   QVector<MeasurementEntry> results();

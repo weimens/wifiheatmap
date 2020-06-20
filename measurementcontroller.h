@@ -68,6 +68,25 @@ private:
   AndroidScan *mAndroidScan;
 };
 
+class AndroidConnectedTask : public Task {
+  Q_OBJECT
+public:
+  AndroidConnectedTask(AndroidScan *androidScan,
+                       QVector<MeasurementEntry> &results)
+      : Task(results), mAndroidScan(androidScan) {}
+
+  void run() {
+    mAndroidScan->connect(mAndroidScan, &AndroidScan::scanFinished, this,
+                          &AndroidScanTask::onFinished);
+    mAndroidScan->connect(mAndroidScan, &AndroidScan::scanFailed, this,
+                          &AndroidScanTask::onFailed);
+    mAndroidScan->connected();
+  }
+
+private:
+  AndroidScan *mAndroidScan;
+};
+
 #elif defined(Q_OS_LINUX)
 class ScanTask : public Task {
   Q_OBJECT

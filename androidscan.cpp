@@ -79,6 +79,63 @@ void AndroidScan::onData() {
   }
 }
 
+std::optional<MeasurementEntry> AndroidScan::connected() {
+  if (!(checkPermission("CHANGE_WIFI_STATE") &&
+        checkPermission("ACCESS_FINE_LOCATION"))) {
+    emit scanFailed(253, "no permission");
+    return {};
+  }
+
+  auto service_name = QAndroidJniObject::getStaticObjectField<jstring>(
+      "android/content/Context", "WIFI_SERVICE");
+  if (service_name.isValid()) {
+    auto wifiManager = QtAndroid::androidActivity().callObjectMethod(
+        "getSystemService", "(Ljava/lang/String;)Ljava/lang/Object;",
+        service_name.object<jstring>());
+    if (wifiManager.isValid()) {
+      auto isWifiEnabled =
+          wifiManager.callMethod<jboolean>("isWifiEnabled", "()Z");
+      if (!isWifiEnabled) {
+        emit scanFailed(252, "wifi not enabled");
+        return {};
+      }
+
+      auto wifiInfo = wifiManager.callObjectMethod(
+          "getConnectionInfo", "()Landroid/net/wifi/WifiInfo;");
+      if (wifiInfo.isValid()) {
+        auto bssid =
+            wifiInfo.callObjectMethod("getBSSID", "()Ljava/lang/String;");
+        if (bssid.isValid()) {
+          auto ssid =
+              wifiInfo.callObjectMethod("getSSID", "()Ljava/lang/String;")
+                  .toString();
+          auto freq = wifiInfo.callMethod<jint>("getFrequency", "()I");
+          auto level =
+              static_cast<double>(wifiInfo.callMethod<jint>("getRssi", "()I"));
+
+          if (ssid.startsWith("\"")) {
+            ssid = ssid.remove(0, 1);
+          }
+          if (ssid.endsWith("\"")) {
+            ssid = ssid.remove(ssid.length() - 1, 1);
+          }
+
+          auto scanInfo = MeasurementEntry{Bss{bssid.toString(), ssid, freq, 0},
+                                           WiFiSignal, level};
+
+          emit scanFinished({scanInfo});
+          return scanInfo;
+        } else {
+          emit scanFailed(251, "not connected");
+          return {};
+        }
+      }
+    }
+  }
+  emit scanFailed(254, "faild");
+  return {};
+}
+
 bool AndroidScan::measure() {
   if (mScanning)
     return false;

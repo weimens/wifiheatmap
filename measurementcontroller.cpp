@@ -40,8 +40,13 @@ bool MeasurementController::measure(QPoint pos) {
     return false;
   mScanning = true;
 #ifdef Q_OS_ANDROID
-  AndroidScanTask *t = new AndroidScanTask{mAndroidScan, mResults};
-  mTaskqueue.enqueue(t);
+  if (mScan) {
+    AndroidScanTask *t = new AndroidScanTask{mAndroidScan, mResults};
+    mTaskqueue.enqueue(t);
+  } else {
+    Task *t = new AndroidConnectedTask{mAndroidScan, mResults};
+    mTaskqueue.enqueue(t);
+  }
 #elif defined(Q_OS_LINUX)
   if (mScan) {
     ScanTask *t = new ScanTask{mLinuxScan, mResults};

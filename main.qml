@@ -543,7 +543,8 @@ ApplicationWindow {
             Loader {
                 Layout.fillWidth: true
                 Component.onCompleted: {
-                    if (Qt.platform.os == "linux") {
+                    if (Qt.platform.os == "linux"
+                            || Qt.platform.os == "android") {
                         this.sourceComponent = scanProcessComponent
                     }
                 }

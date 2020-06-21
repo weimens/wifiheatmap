@@ -12,31 +12,35 @@ or moving one or several APs to another location could be sufficient.
 
 Installation
 ----------
-A precompiled rpm package is available for Fedora 31
+A precompiled rpm package is available for Fedora
 [Releases page](https://github.com/weimens/wifiheatmap/releases).
 
 Basic Usage
 -----------
 1. Open a floor plan (png or jpg).
-2. Start the scan process (this needs root privilege).
-3. Walk to the physical location where you want to measure and click on the corresponding location on the floor plan,
-  to place a measurement and to start the scanning of the WiFi signal.
-  Wait a few seconds until the scan is finished.
+2. Decide which measurement you want:
+	* connected or scan: measure only the currently connected wifi or scan for all available wifis
+	* iperf: measure the bandwidth with iperf3
+		* As usual for iperf you need to start `iperf3 -s` on another pc to act as a server.
+		  This pc should have an ethernet connection which is faster than the wifi that you want to measure,
+          otherwise this becomes an bottleneck.
+3. Walk to the physical location where you want to measure and click on the corresponding location on the floor plan to place a measurement.
+  Wait until the measurement is finished.
   - Repeat this step for the area where you want to collect information on the available WiFi APs.
     Four measurements per room placed in the corners are a good starting point.
-    If something goes wrong, you can remove an Point by double click or move it with drag and drop.
-4. to display the resulting heat map, select an AP from the list on the left side.
+    If something goes wrong, you can remove a point by double click or move it with drag and drop.
+4. To display the resulting heat map, select an AP from the list on the left side.
   When multiple APs are selected,
   the best signal is used to generate the heat map.
 
 Compiling
 ---------
-Please note that wifiheatmap is currently only tested on Fedora 31. If you want to compile wifiheatmap for android take a look at [wifiheatmap-superbuild](https://github.com/weimens/wifiheatmap-superbuild)
+Please note that wifiheatmap is currently only tested on Fedora. If you want to compile wifiheatmap for android take a look at [wifiheatmap-superbuild](https://github.com/weimens/wifiheatmap-superbuild)
 
 Install dependencies,
 ```
 sudo dnf install gcc-c++ cmake make qt5-qtbase-devel qt5-qtdeclarative-devel qt5-qtquickcontrols2 \
-  CGAL-devel libnl3-devel quazip-qt5-devel
+  CGAL-devel libnl3-devel quazip-qt5-devel iperf3-devel
 ```
 get the source code,
 ```

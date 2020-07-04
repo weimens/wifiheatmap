@@ -8,7 +8,7 @@ URL:            https://github.com/weimens/wifiheatmap
 Source0:        wifiheatmap-0.1-alpha.2.tar.gz
 
 BuildRequires:  gcc-c++ cmake make
-BuildRequires:  qt5-qtbase-devel qt5-qtdeclarative-devel CGAL-devel libnl3-devel quazip-qt5-devel
+BuildRequires:  qt5-qtbase-devel qt5-qtdeclarative-devel CGAL-devel libnl3-devel quazip-qt5-devel iperf3-devel
 BuildRequires:  desktop-file-utils libappstream-glib
 Requires:       qt5-qtquickcontrols2
 Requires:       %{_sbindir}/iw
@@ -51,5 +51,7 @@ update-desktop-database &> /dev/null || :
 update-mime-database %{_datadir}/mime &> /dev/null || :
 
 %changelog
+* Fri Jun 19 2020 Clemens Weissbacher
+- 
 * Sat Feb 22 2020 Clemens Weissbacher
 - 

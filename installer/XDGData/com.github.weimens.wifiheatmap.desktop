@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=wifiheatmap
-Exec=env XDG_SESSION_TYPE=x11 wifiheatmap %f
+Exec=wifiheatmap %f
 Icon=com.github.weimens.wifiheatmap
 Type=Application
 MimeType=application/x-extension-whmap;

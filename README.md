@@ -45,6 +45,10 @@ sudo dnf install gcc-c++ cmake make qt5-qtbase-devel qt5-qtdeclarative-devel qt5
 get the source code,
 ```
 git clone https://github.com/weimens/wifiheatmap.git wifiheatmap-source
+cd wifiheatmap-source
+git submodule init
+git submodule update --depth 1
+cd ..
 ```
 build it.
 ```

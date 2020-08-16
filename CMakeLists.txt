@@ -1,10 +1,12 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.14)
 
 project(wifiheatmap LANGUAGES CXX)
 
+list (APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 list (APPEND CMAKE_MODULE_PATH /usr/share/cmake) #WORKAROUND: for fedora 32 QuaZip5Find
 
-find_package(CGAL)
+
+find_package(Delaunator REQUIRED)
 if(ANDROID)
     set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
 else()
@@ -144,7 +146,7 @@ target_link_libraries(${PROJECT_NAME}
     Qt5::Core
     Qt5::Quick
     Qt5::Widgets
-    CGAL::CGAL
+    Delaunator::Delaunator
 )
 if(ANDROID)
     target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::AndroidExtras)

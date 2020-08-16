@@ -5,13 +5,14 @@ Version:        0.1
 Release:        0.1.alpha3%{?dist}
 Summary:        WiFi heat map survey tool
 
-License:        ?
+License:        GPLv2
 URL:            https://github.com/weimens/wifiheatmap
 Source0:        wifiheatmap-0.1-alpha.3.tar.gz
 
 BuildRequires:  gcc-c++ cmake make
-BuildRequires:  qt5-qtbase-devel qt5-qtdeclarative-devel CGAL-devel libnl3-devel quazip-qt5-devel iperf3-devel
+BuildRequires:  qt5-qtbase-devel qt5-qtdeclarative-devel libnl3-devel quazip-qt5-devel iperf3-devel
 BuildRequires:  desktop-file-utils libappstream-glib
+BuildRequires:  git
 Requires:       qt5-qtquickcontrols2
 Requires:       %{_sbindir}/iw
 Requires:       %{_bindir}/pkexec

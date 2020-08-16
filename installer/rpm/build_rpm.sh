@@ -1,8 +1,15 @@
 #!/bin/bash
 
-cd ../..
-git archive --prefix=wifiheatmap-0.1-alpha/ -o installer/rpm/wifiheatmap-0.1-alpha.3.tar.gz master .
-cd installer/rpm
+git clone ../.. wifiheatmap-0.1-alpha
+cd wifiheatmap-0.1-alpha
+git submodule init
+git submodule update --depth 1
+rm -rf ./.git
+rm -rf ./foreign/delaunator-cpp/gtest
+rm -rf ./foreign/delaunator-cpp/.git
+rm -rf ./foreign/delaunator-cpp/test-files
+cd ..
+tar -cavf wifiheatmap-0.1-alpha.3.tar.gz ./wifiheatmap-0.1-alpha/
 fedpkg --release f32 mockbuild
 fedpkg --release f33 mockbuild
 fedpkg --release f34 mockbuild

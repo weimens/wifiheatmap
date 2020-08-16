@@ -128,6 +128,6 @@ target_link_libraries(tst_heatmap
     Qt5::Gui
     Qt5::Quick
     QuaZip5::QuaZip5
-    CGAL::CGAL
+    Delaunator::Delaunator
     Qt5::Widgets
 )

@@ -1,0 +1,4 @@
+[submodule "foreign/delaunator-cpp"]
+	path = foreign/delaunator-cpp
+	url = https://github.com/abellgithub/delaunator-cpp.git
+	shallow = true

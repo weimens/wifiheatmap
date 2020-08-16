@@ -1,21 +1,39 @@
 #include "heatmap.h"
 
+#include "delaunator-header-only.hpp"
 #include <algorithm>
+#include <cmath>
 
-//#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+struct find_simplex_result {
+  bool found;
+  size_t pos;
+  double A;
+  double B;
+  double C;
+};
 
-#include <CGAL/Delaunay_triangulation_2.h>
-#include <CGAL/Interpolation_traits_2.h>
-#include <CGAL/interpolation_functions.h>
-#include <CGAL/natural_neighbor_coordinates_2.h>
+/*
+ * Find simplex that contains point x,y by brute-force.
+ */
+struct find_simplex_result
+find_simplex(const std::vector<double> &transform, const double &x,
+             const double &y,
+             const double eps = std::numeric_limits<double>::epsilon()) {
+  for (std::size_t k = 0; k < transform.size(); k += 6) {
+    // barycentric coordinates
+    const double Bx = transform[k + 4];
+    const double By = transform[k + 5];
+    const double A = transform[k + 0] * (x - Bx) + transform[k + 1] * (y - By);
+    const double C = transform[k + 2] * (x - Bx) + transform[k + 3] * (y - By);
+    const double B = 1 - A - C;
 
-// typedef CGAL::Exact_predicates_exact_constructions_kernel K;
-typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-typedef CGAL::Delaunay_triangulation_2<K> Delaunay_triangulation;
-typedef CGAL::Interpolation_traits_2<K> Traits;
-typedef K::FT Coord_type;
-typedef K::Point_2 Point;
+    // point is inside simplex
+    if (A - eps > 0 && B - eps > 0 && C - eps > 0) {
+      return find_simplex_result{true, k / 2, A, B, C};
+    }
+  }
+  return find_simplex_result{false, 0, 0, 0, 0};
+}
 
 static const QVector<QRgb> colors = {
     qRgba(0, 0, 0, 0),         qRgba(165, 0, 38, 255),
@@ -220,12 +238,7 @@ void HeatMapCalc::generateHeatMap() {
   if (!(mDocument && mDocument->measurements()))
     return;
 
-  Delaunay_triangulation T;
-  typedef std::map<Point, Coord_type, K::Less_xy_2> Coord_map;
-  typedef CGAL::Data_access<Coord_map> Value_access;
-  Coord_map value_function;
-
-  int maxsize = 60;
+  int maxsize = 512;
   int nx;
   int ny;
 
@@ -244,39 +257,72 @@ void HeatMapCalc::generateHeatMap() {
     ny = maxsize;
   }
 
+  std::vector<double> coords;
+  std::vector<double> values;
   for (int i = 0; i < mDocument->measurements()->positions().size(); ++i) {
     qreal z = mDocument->measurements()->maxZAt(i);
     if (!std::isnan(z)) {
       QPoint pos = mDocument->measurements()->positions().at(i).pos;
-      value_function.insert({Point(pos.x(), pos.y()), z});
+      coords.push_back(pos.x());
+      coords.push_back(pos.y());
+      values.push_back(z);
     }
-  }
-
-  for (auto coord : value_function) {
-    T.insert(coord.first);
   }
 
   heatmapZ = std::vector<std::vector<double>>(nx, std::vector<double>(ny, NAN));
 
-  if (value_function.size() >= 3) {
-    double x, y;
+  if (coords.size() >= 3 * 2) {
+    delaunator::Delaunator d(coords);
+    std::vector<double> transform(d.triangles.size() * 2);
+
+    for (std::size_t i = 0; i < d.triangles.size(); i += 3) {
+      const double detinv = 1 / ((coords[2 * d.triangles[i + 1] + 1] -
+                                  coords[2 * d.triangles[i + 2] + 1]) *
+                                     (coords[2 * d.triangles[i + 0] + 0] -
+                                      coords[2 * d.triangles[i + 2] + 0]) +
+                                 (coords[2 * d.triangles[i + 2] + 0] -
+                                  coords[2 * d.triangles[i + 1] + 0]) *
+                                     (coords[2 * d.triangles[i + 0] + 1] -
+                                      coords[2 * d.triangles[i + 2] + 1]));
+
+      const std::size_t j = i * 2;
+
+      // transform from cartesian x to barycentric coordinates
+      // c = Tinv (x-r)
+
+      // Tinv
+      transform[j] = (coords[2 * d.triangles[i + 1] + 1] -
+                      coords[2 * d.triangles[i + 2] + 1]) *
+                     detinv;
+      transform[j + 1] = (coords[2 * d.triangles[i + 2] + 0] -
+                          coords[2 * d.triangles[i + 1] + 0]) *
+                         detinv;
+      transform[j + 2] = (coords[2 * d.triangles[i + 0] + 1] -
+                          coords[2 * d.triangles[i + 1] + 1]) *
+                         detinv;
+      transform[j + 3] = (coords[2 * d.triangles[i + 1] + 0] -
+                          coords[2 * d.triangles[i + 0] + 0]) *
+                         detinv;
+      // r
+      transform[j + 4] = coords[2 * d.triangles[i + 1] + 0];
+      transform[j + 5] = coords[2 * d.triangles[i + 1] + 1];
+    }
+
     for (int i = 0; i < nx; ++i) {
       for (int j = 0; j < ny; ++j) {
-        x = i / static_cast<double>(nx) * w;
-        y = j / static_cast<double>(ny) * h;
+        double x = i / static_cast<double>(nx) * w;
+        double y = j / static_cast<double>(ny) * h;
 
-        std::vector<std::pair<Point, Coord_type>> coords;
-        Point p = Point(x, y);
+        struct find_simplex_result found = find_simplex(transform, x, y);
 
-        auto res = CGAL::natural_neighbor_coordinates_2(
-            T, p, std::back_inserter(coords));
-        Coord_type norm = res.second;
-        bool success = res.third;
-        if (success) {
-          Coord_type res = CGAL::linear_interpolation(
-              coords.begin(), coords.end(), norm, Value_access(value_function));
-          heatmapZ[i][j] = CGAL::to_double(res);
+        if (!found.found) {
+          continue;
         }
+
+        // linear barycentric interpolation
+        heatmapZ[i][j] = values[d.triangles[found.pos + 0]] * found.A +
+                         values[d.triangles[found.pos + 1]] * found.B +
+                         values[d.triangles[found.pos + 2]] * found.C;
       }
     }
   }
@@ -301,7 +347,7 @@ void HeatMapCalc::generateImage() {
   for (int i = 0; i < nx; ++i) {
     for (int j = 0; j < ny; ++j) {
       double z = heatmapZ[i][j];
-      if (!isnan(z)) {
+      if (!std::isnan(z)) {
         if (mHeatMapLegend->flip() < 0) {
           if (z < mHeatMapLegend->zmin())
             z = mHeatMapLegend->zmin();

@@ -1,0 +1,32 @@
+env:
+  global:
+    - CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:-Release}
+
+git:
+  depth: 1
+
+jobs:
+    include:
+      - os: linux
+        dist: bionic
+        language: cpp
+        compiler: gcc
+        cache: ccache
+
+before_install:
+- |
+  case "${TRAVIS_OS_NAME}" in
+   "linux")
+       sudo apt-get update -qq
+       # Build deps
+       sudo apt-get install -y --no-install-recommends          \
+                               libquazip5-dev
+       ;;
+   *)
+       echo "Invalid or unsupported operating system ${TRAVIS_OS_NAME}"
+       exit 1
+       ;;
+  esac
+install:
+  - mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} ../
+

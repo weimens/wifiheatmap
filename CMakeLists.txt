@@ -68,7 +68,11 @@ target_sources(${PROJECT_NAME} PRIVATE
     helper.h
     commands.h
     measurementtypemodel.h
-    entries.h
+    entries/bss.h
+    entries/measurement.h
+    entries/measurement_entry.h
+    entries/measurement_type.h
+    entries/position.h
     measurementcontroller.h
     statusqueue.h
 

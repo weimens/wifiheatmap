@@ -4,7 +4,7 @@
 #include <QPoint>
 #include <QUndoStack>
 
-#include "entries.h"
+#include "entries/measurement_entry.h"
 #include "measurements.h"
 
 class MeasurementModel : public QAbstractListModel {

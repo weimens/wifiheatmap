@@ -1,6 +1,6 @@
 #pragma once
 
-#include "entries.h"
+#include "entries/measurement_type.h"
 #include "measurements.h"
 #include <QAbstractTableModel>
 

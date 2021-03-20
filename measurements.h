@@ -4,7 +4,11 @@
 #include <QPoint>
 #include <QVector>
 
-#include "entries.h"
+#include "entries/bss.h"
+#include "entries/measurement.h"
+#include "entries/measurement_entry.h"
+#include "entries/measurement_type.h"
+#include "entries/position.h"
 
 class Measurements : public QObject {
   Q_OBJECT

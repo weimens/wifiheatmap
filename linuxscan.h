@@ -6,7 +6,7 @@
 #include <QProcess>
 #include <QTimer>
 
-#include "entries.h"
+#include "entries/measurement_entry.h"
 
 class LinuxScan : public QObject {
   Q_OBJECT

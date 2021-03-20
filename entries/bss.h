@@ -2,11 +2,16 @@
 
 #include <QString>
 
-struct Bss {
+class Bss {
+public:
   QString bssid;
   QString ssid;
   int freq;
   int channel;
+
+  Bss() = default;
+  Bss(const Bss &) = default;
+  Bss &operator=(const Bss &) = default;
 
   Bss(QString bssid, QString ssid, int freq, int channel) { // FIXME:
     this->bssid = bssid;

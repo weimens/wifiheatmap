@@ -3,11 +3,16 @@
 #include "bss.h"
 #include "measurement_type.h"
 
-struct MeasurementEntry {
+class MeasurementEntry {
+public:
   Bss bss;
   double value;
   MeasurementType measurementType;
 
+  MeasurementEntry() = default;
+  MeasurementEntry(const MeasurementEntry &) = default;
+  MeasurementEntry &operator=(const MeasurementEntry &) = default;
+
   MeasurementEntry(Bss bss, MeasurementType measurementType, double value)
-      : bss(bss), measurementType(measurementType), value(value) {}
+      : bss(bss), value(value), measurementType(measurementType) {}
 };

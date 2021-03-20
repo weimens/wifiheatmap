@@ -5,6 +5,7 @@
 #include <QPoint>
 #include <QProcess>
 #include <QTimer>
+#include <QVector>
 
 #include "entries/measurement_entry.h"
 

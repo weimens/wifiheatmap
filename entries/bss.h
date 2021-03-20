@@ -25,3 +25,5 @@ public:
            this->freq == b.freq && this->channel == b.channel;
   }
 };
+
+Q_DECLARE_METATYPE(Bss);

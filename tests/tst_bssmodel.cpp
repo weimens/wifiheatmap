@@ -40,6 +40,8 @@ private slots:
     QCOMPARE(bssModel.rowCount(), 2);
   }
   void selection() {
+    qRegisterMetaType<QVector<Bss>>("QVector<Bss>");
+
     Measurements m;
     BssModel bssModel;
     bssModel.measurementsChanged(&m);
@@ -63,12 +65,21 @@ private slots:
     bssModel.setData(bssModel.index(0, 4), true, Qt::CheckStateRole);
     // ==============
     QTRY_COMPARE_WITH_TIMEOUT(selectedBssChanged.count(), 1, 200);
+    auto arguments1 = selectedBssChanged.takeAt(0);
+    QVector<Bss> expected_result1 = {
+        Bss{"36:2c:94:64:26:28", "chips", 2437, 6}};
+    QTRY_COMPARE_WITH_TIMEOUT(arguments1.at(0).value<QVector<Bss>>(),
+                              expected_result1, 200);
 
     // unsselect first entry
     // ==============
     bssModel.setData(bssModel.index(0, 4), false, Qt::CheckStateRole);
     // ==============
-    QTRY_COMPARE_WITH_TIMEOUT(selectedBssChanged.count(), 2, 200);
+    QTRY_COMPARE_WITH_TIMEOUT(selectedBssChanged.count(), 1, 200);
+    auto arguments2 = selectedBssChanged.takeAt(0);
+    QVector<Bss> expected_result2 = {};
+    QTRY_COMPARE_WITH_TIMEOUT(arguments2.at(0).value<QVector<Bss>>(),
+                              expected_result2, 200);
   }
 };
 

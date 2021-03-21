@@ -1,9 +1,9 @@
 #pragma once
 
 #include <QObject>
-
 #include <QPoint>
 #include <QThread>
+#include <optional>
 
 #include "measurements.h"
 

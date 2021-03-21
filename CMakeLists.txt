@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.5)
 
 project(wifiheatmap LANGUAGES CXX)
 
+list (APPEND CMAKE_MODULE_PATH /usr/share/cmake) #WORKAROUND: for fedora 32 QuaZip5Find
+
 find_package(CGAL)
 if(ANDROID)
     set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")

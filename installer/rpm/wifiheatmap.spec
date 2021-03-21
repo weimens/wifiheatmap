@@ -1,11 +1,13 @@
+%undefine __cmake_in_source_build
+
 Name:           wifiheatmap
 Version:        0.1
-Release:        0.1.alpha2%{?dist}
+Release:        0.1.alpha3%{?dist}
 Summary:        WiFi heat map survey tool
 
 License:        ?
 URL:            https://github.com/weimens/wifiheatmap
-Source0:        wifiheatmap-0.1-alpha.2.tar.gz
+Source0:        wifiheatmap-0.1-alpha.3.tar.gz
 
 BuildRequires:  gcc-c++ cmake make
 BuildRequires:  qt5-qtbase-devel qt5-qtdeclarative-devel CGAL-devel libnl3-devel quazip-qt5-devel iperf3-devel
@@ -23,12 +25,13 @@ WiFi heat map survey tool.
 
 
 %build
-%cmake -DTRIGGER_SCAN_BIN=%{_bindir}/%{name}_trigger_scan .
-make %{?_smp_mflags}
-
+%cmake -DTRIGGER_SCAN_BIN=%{_bindir}/%{name}_trigger_scan
+%cmake_build
 
 %install
+pushd %{_target_platform}
 %make_install
+popd
 
 %files
 %{_bindir}/%{name}
@@ -51,6 +54,8 @@ update-desktop-database &> /dev/null || :
 update-mime-database %{_datadir}/mime &> /dev/null || :
 
 %changelog
+* Sun Mar 21 2020 Clemens Weissbacher
+- 
 * Fri Jun 19 2020 Clemens Weissbacher
 - 
 * Sat Feb 22 2020 Clemens Weissbacher

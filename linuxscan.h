@@ -6,6 +6,7 @@
 #include <QProcess>
 #include <QTimer>
 #include <QVector>
+#include <optional>
 
 #include "entries/measurement_entry.h"
 

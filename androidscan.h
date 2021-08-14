@@ -3,7 +3,7 @@
 #include <QObject>
 #include <QPoint>
 
-#include "entries.h"
+#include "entries/measurement_entry.h"
 
 class AndroidScan : public QObject {
   Q_OBJECT

@@ -7,14 +7,17 @@ Item {
 
     Connections {
         target: document
-        onMapImageChanged: mapimage.reload()
+        function onMapImageChanged() {
+            mapimage.reload()
+        }
     }
 
     Connections {
         target: heatMapCalc
-        onHeatMapReady: heatmapimage.reload()
+        function onHeatMapReady() {
+            heatmapimage.reload()
+        }
     }
-
     Image {
         id: mapimage
         anchors.centerIn: parent
